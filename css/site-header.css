@@ -148,6 +148,40 @@
   color: var(--color-primary);
 }
 
+/* Service page sub-navigation (assembly, installation, other services) */
+
+.service-page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px 16px;
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.service-page-nav a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.service-page-nav a:hover {
+  border-color: var(--color-primary);
+}
+
+.service-page-nav a[aria-current="page"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
 @media (min-width: 768px) {
   .site-header-inner {
     padding: 12px 24px;
