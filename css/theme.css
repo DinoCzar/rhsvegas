@@ -1,7 +1,5 @@
 /* Ryan's Home Solutions — design tokens & shared components */
 
-@import url("site-header.css");
-
 :root {
   --color-primary: #2d4a7a;
   --color-primary-dark: #1e3558;

@@ -38,7 +38,7 @@ services:
     headers:
       - path: /*
         name: Cache-Control
-        value: public, max-age=300
+        value: no-cache, must-revalidate
     routes:
       - type: rewrite
         source: /cart
