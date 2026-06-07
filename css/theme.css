@@ -1,5 +1,7 @@
 /* Ryan's Home Solutions — design tokens & shared components */
 
+@import url("site-header.css");
+
 :root {
   --color-primary: #2d4a7a;
   --color-primary-dark: #1e3558;
@@ -15,7 +17,7 @@
   --radius-md: 12px;
   --radius-pill: 999px;
   --shadow-btn: 0 4px 14px rgba(45, 74, 122, 0.22);
-  --header-height: 56px;
+  --header-height: 72px;
   --rhs-overlay: rgba(30, 53, 88, 0.55);
 }
 
@@ -24,49 +26,6 @@ body {
   font-family: var(--font-body);
   color: var(--color-text);
   background: var(--color-surface);
-}
-
-/* ── Simple page header (assembly, cart, home, etc.) ── */
-
-.service-page-header {
-  background: var(--color-surface-alt);
-  color: var(--color-primary);
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.05rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.service-page-header-title {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-family: inherit;
-  font-weight: inherit;
-  font-size: inherit;
-}
-
-.service-page-header-title:hover {
-  text-decoration: underline;
-}
-
-.service-page-header-cart {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.875rem;
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
-  background: #fff;
-  border: 1px solid var(--color-border);
-}
-
-.service-page-header-cart:hover {
-  border-color: var(--color-primary);
 }
 
 /* ── Buttons ── */
