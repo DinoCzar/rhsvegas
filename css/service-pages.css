@@ -12,10 +12,6 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-.service-page-header {
-  margin-bottom: 8px;
-}
-
 .accordion-container {
   width: 100%;
   max-width: 100%;
