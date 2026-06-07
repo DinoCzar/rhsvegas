@@ -3,16 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache">
   <title>Other Services | Ryan's Home Solutions</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/site-header.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/service-pages.css">
   <link rel="stylesheet" href="/css/service-search.css">
 </head>
 <body class="accordion-page">
-<script src="/js/site-header.js"></script>
+
+<header class="site-header-main">
+  <div class="site-header-inner">
+    <div class="header-left">
+      <button class="menu-btn" type="button" aria-label="Open menu" data-menu-open>
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <a class="header-logo" href="/" aria-label="Ryan's Home Solutions home">
+      <img src="https://img1.wsimg.com/isteam/ip/cc0bc11c-275a-4484-a3ca-d1f6e15226db/IMG_5372.jpeg/:/rs=w:400,h:200,m" alt="Ryan's Home Solutions" width="200" height="100">
+    </a>
+    <div class="header-right">
+      <a class="header-cart-link" data-cart-link href="/cart">Cart (<span data-cart-count>0</span>)</a>
+    </div>
+  </div>
+</header>
+<div class="nav-drawer-backdrop" data-nav-backdrop></div>
+<nav class="nav-drawer" data-nav-drawer aria-label="Site navigation">
+  <button class="nav-drawer-close" type="button" aria-label="Close menu" data-menu-close>&times;</button>
+  <a href="/">Home</a>
+  <a href="/services">Services</a>
+  <a href="/assembly/">Assembly</a>
+  <a href="/installation/">Installation</a>
+  <a href="/other-services/">Other Services</a>
+  <a data-cart-link href="/cart">Cart (<span data-cart-count>0</span>)</a>
+</nav>
 
 <div class="service-search-wrap">
   <input type="search" class="service-search-input" placeholder="Search other services..." aria-label="Search other services">
