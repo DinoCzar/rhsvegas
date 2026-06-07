@@ -13,33 +13,7 @@ body {
 }
 
 .service-page-header {
-  background: var(--color-surface-alt);
-  color: var(--color-primary);
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 1.05rem;
-  border-bottom: 1px solid var(--color-border);
   margin-bottom: 8px;
-}
-
-.service-page-header a {
-  color: var(--color-primary);
-  text-decoration: none;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.875rem;
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
-  background: #fff;
-  border: 1px solid var(--color-border);
-}
-
-.service-page-header a:hover {
-  border-color: var(--color-primary);
 }
 
 .accordion-container {
