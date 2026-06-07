@@ -9,7 +9,7 @@
     "seed": "node src/scripts/seed-admin.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.18.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

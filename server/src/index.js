@@ -42,7 +42,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ ok: false, error: "Internal server error." });
 });
 
-app.listen(config.port, () => {
-  console.log(`RHS Vegas API listening on http://localhost:${config.port}`);
-  console.log(`Employee portal: http://localhost:${config.port}/admin/`);
+app.listen(config.port, "0.0.0.0", () => {
+  console.log(`RHS Vegas API listening on port ${config.port}`);
+  console.log(`Employee portal: /admin/`);
 });

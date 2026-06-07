@@ -1,8 +1,7 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
 #
-# After connecting this repo in Render, set env vars on the API service
-# (see server/.env.example). Then update js/config.js apiUrl with your
-# live API URL, e.g. https://rhsvegas-api.onrender.com/api
+# After deploy, set env vars on the API service (see server/.env.example).
+# Update js/config.js with your live Render URLs if they differ from the defaults.
 
 services:
   - type: web
@@ -14,6 +13,8 @@ services:
     plan: free
     healthCheckPath: /api/health
     envVars:
+      - key: NODE_VERSION
+        value: "20.18.0"
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET
@@ -27,14 +28,32 @@ services:
       - key: FRONTEND_ORIGINS
         sync: false
       - key: DATABASE_PATH
-        value: /var/data/rhsvegas.db
+        value: ./data/rhsvegas.db
 
   - type: web
     name: rhsvegas-site
     runtime: static
-    buildCommand: echo "Static site — no build step"
+    buildCommand: "true"
     staticPublishPath: .
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: public, max-age=3600
+    routes:
+      - type: rewrite
+        source: /cart
+        destination: /cart/index.html
+      - type: rewrite
+        source: /checkout
+        destination: /checkout/index.html
+      - type: rewrite
+        source: /confirmation
+        destination: /confirmation/index.html
+      - type: rewrite
+        source: /services
+        destination: /services/index.html
+      - type: rewrite
+        source: /assembly
+        destination: /assembly/index.html
+      - type: rewrite
+        source: /installation
+        destination: /installation/index.html
+      - type: rewrite
+        source: /other-services
+        destination: /other-services/index.html

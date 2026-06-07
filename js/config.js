@@ -5,8 +5,8 @@ window.RHS_CONFIG = {
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://localhost:3001/api";
     }
-    // TODO: replace with your Render API URL after first deploy
-    return "https://rhsvegas-api.onrender.com/api";
+    // Update if your Render API service has a different name
+    return "https://rhsvegas-api-c5y0.onrender.com/api";
   })(),
 
   // Staff portal to manage availability
@@ -15,7 +15,7 @@ window.RHS_CONFIG = {
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://localhost:3001/admin/";
     }
-    return "https://rhsvegas-api.onrender.com/admin/";
+    return "https://rhsvegas-api-c5y0.onrender.com/admin/";
   })(),
 
   homeUrl: "/",
