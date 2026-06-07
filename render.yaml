@@ -35,6 +35,10 @@ services:
     runtime: static
     buildCommand: "true"
     staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=300
     routes:
       - type: rewrite
         source: /cart
