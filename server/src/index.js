@@ -1,0 +1,48 @@
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const config = require("./config");
+const authRoutes = require("./routes/auth");
+const availabilityRoutes = require("./routes/availability");
+const checkoutRoutes = require("./routes/checkout");
+
+const app = express();
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || config.frontendOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
+  })
+);
+
+app.use(express.json({ limit: "1mb" }));
+
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, service: "rhsvegas-api" });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/availability", availabilityRoutes);
+app.use("/api/checkout", checkoutRoutes);
+
+const adminPath = path.join(__dirname, "../../admin");
+app.use("/admin", express.static(adminPath));
+
+app.use((err, req, res, next) => {
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({ ok: false, error: "Origin not allowed." });
+  }
+  console.error(err);
+  res.status(500).json({ ok: false, error: "Internal server error." });
+});
+
+app.listen(config.port, () => {
+  console.log(`RHS Vegas API listening on http://localhost:${config.port}`);
+  console.log(`Employee portal: http://localhost:${config.port}/admin/`);
+});

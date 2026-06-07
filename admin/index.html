@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Portal | Ryan's Home Solutions</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div id="login-view" class="login-wrap">
+  <div class="login-card">
+    <h1>Staff Login</h1>
+    <p>Set your availability for customer bookings.</p>
+    <form id="login-form">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button class="btn-primary" type="submit" style="width:100%">Sign In</button>
+      <p class="status error" id="login-status"></p>
+    </form>
+  </div>
+</div>
+
+<div id="app-view" class="hidden">
+  <header class="admin-header">
+    <div>
+      <h1>Ryan's Home Solutions — Availability</h1>
+      <div class="user-badge" id="user-label"></div>
+    </div>
+    <button type="button" id="logout-btn">Sign Out</button>
+  </header>
+
+  <div class="admin-wrap">
+    <div class="card">
+      <h2>Add Available Time</h2>
+      <form id="add-slot-form">
+        <div id="employee-select-wrap" class="hidden">
+          <label for="employee-select">Employee</label>
+          <select id="employee-select"></select>
+        </div>
+        <label for="slot-date">Date</label>
+        <input id="slot-date" type="date" required>
+        <div class="form-row">
+          <div>
+            <label for="start-time">Start time</label>
+            <input id="start-time" type="time" required value="09:00">
+          </div>
+          <div>
+            <label for="end-time">End time</label>
+            <input id="end-time" type="time" required value="11:00">
+          </div>
+        </div>
+        <button class="btn-primary" type="submit">Add Availability</button>
+        <p class="status" id="add-status"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Upcoming Availability</h2>
+      <p class="status" id="list-status">Loading…</p>
+      <ul class="slot-list" id="slot-list"></ul>
+    </div>
+
+    <div class="card hidden" id="admin-employees-card">
+      <h2>Employees</h2>
+      <table class="employee-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody id="employee-table-body"></tbody>
+      </table>
+      <h2 style="margin-top:24px">Add Employee</h2>
+      <form id="add-employee-form">
+        <label for="new-name">Name</label>
+        <input id="new-name" type="text" required>
+        <label for="new-email">Email</label>
+        <input id="new-email" type="email" required>
+        <label for="new-password">Temporary password</label>
+        <input id="new-password" type="password" minlength="8" required>
+        <button class="btn-primary" type="submit">Create Employee Account</button>
+        <p class="status" id="employee-status"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  (function () {
+    var loginView = document.getElementById("login-view");
+    var appView = document.getElementById("app-view");
+    var userLabel = document.getElementById("user-label");
+    var slotList = document.getElementById("slot-list");
+    var listStatus = document.getElementById("list-status");
+    var employeeWrap = document.getElementById("employee-select-wrap");
+    var employeeSelect = document.getElementById("employee-select");
+    var adminCard = document.getElementById("admin-employees-card");
+
+    function formatRange(start, end) {
+      var s = new Date(start.replace("T", " ") + (start.length === 19 ? "" : ""));
+      var e = new Date(end.replace("T", " ") + (end.length === 19 ? "" : ""));
+      var opts = { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" };
+      return s.toLocaleString(undefined, opts) + " – " + e.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    }
+
+    function dateRange() {
+      var from = new Date();
+      var to = new Date();
+      to.setDate(to.getDate() + 60);
+      return {
+        from: from.toISOString().slice(0, 10),
+        to: to.toISOString().slice(0, 10)
+      };
+    }
+
+    function showApp() {
+      var user = RHSAdmin.getUser();
+      loginView.classList.add("hidden");
+      appView.classList.remove("hidden");
+      userLabel.textContent = user.name + " (" + user.role + ")";
+
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById("slot-date").min = tomorrow.toISOString().slice(0, 10);
+
+      if (user.role === "admin") {
+        employeeWrap.classList.remove("hidden");
+        adminCard.classList.remove("hidden");
+        loadEmployees();
+      } else {
+        employeeWrap.classList.add("hidden");
+        adminCard.classList.add("hidden");
+      }
+
+      loadSlots();
+    }
+
+    function loadEmployees() {
+      RHSAdmin.listEmployees()
+        .then(function (res) {
+          employeeSelect.innerHTML = res.users
+            .filter(function (u) { return u.active; })
+            .map(function (u) {
+              return '<option value="' + u.id + '">' + escapeHtml(u.name) + "</option>";
+            })
+            .join("");
+
+          document.getElementById("employee-table-body").innerHTML = res.users
+            .map(function (u) {
+              return "<tr><td>" + escapeHtml(u.name) + "</td><td>" + escapeHtml(u.email) +
+                "</td><td>" + escapeHtml(u.role) + "</td></tr>";
+            })
+            .join("");
+        })
+        .catch(function (err) {
+          document.getElementById("employee-status").textContent = err.message;
+        });
+    }
+
+    function loadSlots() {
+      var range = dateRange();
+      var user = RHSAdmin.getUser();
+      var userId = user.role === "admin" ? employeeSelect.value : null;
+
+      listStatus.textContent = "Loading…";
+      slotList.innerHTML = "";
+
+      RHSAdmin.fetchSlots(range.from, range.to, userId)
+        .then(function (res) {
+          listStatus.textContent = "";
+          if (!res.slots.length) {
+            listStatus.textContent = "No upcoming availability. Add time slots above.";
+            return;
+          }
+
+          res.slots.forEach(function (slot) {
+            var li = document.createElement("li");
+            var booked = slot.booking_id ? '<span class="badge-booked">Booked ' + escapeHtml(slot.order_id || "") + "</span>" : "";
+            li.innerHTML =
+              "<div><strong>" + formatRange(slot.start_at, slot.end_at) + "</strong>" +
+              (slot.employee_name ? '<div class="slot-meta">' + escapeHtml(slot.employee_name) + "</div>" : "") +
+              "</div><div>" + booked +
+              (slot.booking_id ? "" : '<button class="btn-danger" data-delete="' + slot.id + '">Remove</button>') +
+              "</div>";
+            slotList.appendChild(li);
+          });
+        })
+        .catch(function (err) {
+          listStatus.textContent = err.message;
+          listStatus.className = "status error";
+        });
+    }
+
+    function escapeHtml(v) {
+      return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var status = document.getElementById("login-status");
+      status.textContent = "";
+      RHSAdmin.login(document.getElementById("email").value, document.getElementById("password").value)
+        .then(function (res) {
+          RHSAdmin.setSession(res.token, res.user);
+          showApp();
+        })
+        .catch(function (err) {
+          status.textContent = err.message;
+        });
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", function () {
+      RHSAdmin.clearSession();
+      appView.classList.add("hidden");
+      loginView.classList.remove("hidden");
+    });
+
+    document.getElementById("add-slot-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var status = document.getElementById("add-status");
+      status.textContent = "Saving…";
+      status.className = "status";
+
+      var payload = {
+        date: document.getElementById("slot-date").value,
+        startTime: document.getElementById("start-time").value,
+        endTime: document.getElementById("end-time").value
+      };
+
+      var user = RHSAdmin.getUser();
+      if (user.role === "admin" && employeeSelect.value) {
+        payload.userId = Number(employeeSelect.value);
+      }
+
+      RHSAdmin.addSlot(payload)
+        .then(function () {
+          status.textContent = "Availability added.";
+          status.className = "status success";
+          loadSlots();
+        })
+        .catch(function (err) {
+          status.textContent = err.message;
+          status.className = "status error";
+        });
+    });
+
+    slotList.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-delete]");
+      if (!btn) return;
+      if (!confirm("Remove this availability slot?")) return;
+      RHSAdmin.deleteSlot(btn.getAttribute("data-delete"))
+        .then(loadSlots)
+        .catch(function (err) {
+          alert(err.message);
+        });
+    });
+
+    if (employeeSelect) {
+      employeeSelect.addEventListener("change", loadSlots);
+    }
+
+    document.getElementById("add-employee-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var status = document.getElementById("employee-status");
+      status.textContent = "Creating…";
+      RHSAdmin.createEmployee({
+        name: document.getElementById("new-name").value,
+        email: document.getElementById("new-email").value,
+        password: document.getElementById("new-password").value,
+        role: "employee"
+      })
+        .then(function () {
+          status.textContent = "Employee created.";
+          status.className = "status success";
+          document.getElementById("add-employee-form").reset();
+          loadEmployees();
+        })
+        .catch(function (err) {
+          status.textContent = err.message;
+          status.className = "status error";
+        });
+    });
+
+    if (RHSAdmin.getToken() && RHSAdmin.getUser()) {
+      showApp();
+    }
+  })();
+</script>
+
+</body>
+</html>

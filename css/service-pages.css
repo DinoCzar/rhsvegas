@@ -1,0 +1,183 @@
+/* Accordion service lists — assembly, installation, other services */
+
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  color: var(--color-text);
+  -webkit-overflow-scrolling: touch;
+}
+
+.service-page-header {
+  background: var(--color-surface-alt);
+  color: var(--color-primary);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.05rem;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 8px;
+}
+
+.service-page-header a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  border: 1px solid var(--color-border);
+}
+
+.service-page-header a:hover {
+  border-color: var(--color-primary);
+}
+
+.accordion-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: visible;
+  height: auto;
+  position: relative;
+}
+
+.category {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.dropdown-btn {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background 0.15s ease, transform 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dropdown-btn:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.dropdown-btn span:first-child {
+  text-align: center;
+}
+
+.arrow {
+  position: absolute;
+  right: 18px;
+  font-size: 0.75rem;
+  transition: transform 0.25s ease;
+  opacity: 0.85;
+}
+
+.dropdown-btn.active .arrow {
+  transform: rotate(180deg);
+}
+
+.content {
+  display: none;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  overflow: visible;
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  margin-top: -4px;
+}
+
+.dropdown-btn.active {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9375rem;
+  box-sizing: border-box;
+  gap: 16px;
+  background: var(--color-surface);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item > span:first-child {
+  justify-self: start;
+  font-weight: 500;
+}
+
+.price {
+  font-weight: 600;
+  white-space: nowrap;
+  justify-self: center;
+  text-align: center;
+  color: var(--color-primary);
+}
+
+@media (min-width: 601px) {
+  .category {
+    padding: 8px 0;
+  }
+
+  .dropdown-btn {
+    width: 70%;
+    margin: 0 auto;
+    padding: 15px 20px;
+  }
+
+  .content {
+    width: 70%;
+    margin: 0 auto;
+  }
+
+  .accordion-page .service-search-wrap {
+    width: 70%;
+  }
+}
+
+@media (max-width: 600px) {
+  .dropdown-btn {
+    width: 100%;
+    font-size: 0.9375rem;
+    padding: 15px 18px;
+  }
+
+  .content {
+    width: 100%;
+  }
+
+  .item {
+    font-size: 0.9375rem;
+    padding: 16px;
+  }
+}

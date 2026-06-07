@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Ryan's Home Solutions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<div class="page-site-header">
+  <span>Ryan's Home Solutions</span>
+  <a data-cart-link href="/cart">Cart (<span data-cart-count>0</span>)</a>
+</div>
+
+<div class="page-wrap">
+  <h1>Checkout</h1>
+  <p class="subtitle">No payment is due now. Submit your request and pick an available appointment time.</p>
+
+  <div class="notice">
+    <strong>No payment required.</strong> We will confirm your appointment and any custom pricing before service.
+  </div>
+
+  <div class="card card-padded">
+    <h2>Order Summary</h2>
+    <div id="order-summary"></div>
+  </div>
+
+  <form id="checkout-form">
+    <div class="card card-padded">
+      <h2>Contact Information</h2>
+      <div class="form-grid">
+        <div>
+          <label for="name">Full Name *</label>
+          <input id="name" name="name" type="text" required autocomplete="name">
+        </div>
+        <div>
+          <label for="email">Email *</label>
+          <input id="email" name="email" type="email" required autocomplete="email">
+        </div>
+        <div>
+          <label for="phone">Phone *</label>
+          <input id="phone" name="phone" type="tel" required autocomplete="tel">
+        </div>
+        <div>
+          <label for="address">Service Address *</label>
+          <textarea id="address" name="address" required autocomplete="street-address" placeholder="Street, city, zip"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-padded">
+      <h2>Select Appointment</h2>
+      <p class="help-text">Choose from available appointment times (<span id="timezone-label">Pacific Time</span>).</p>
+      <div>
+        <label for="appointment-date">Preferred Date *</label>
+        <input id="appointment-date" name="appointmentDate" type="date" required>
+      </div>
+      <div id="slot-section" hidden>
+        <label>Available Times *</label>
+        <div class="slot-grid" id="slot-grid"></div>
+        <p class="status" id="slot-status"></p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="submit-btn" type="submit">Submit Booking Request</button>
+    <p class="status" id="form-status"></p>
+  </form>
+
+  <a class="btn-secondary" href="/cart">← Back to cart</a>
+</div>
+
+<script src="/js/config.js"></script>
+<script src="/js/cart.js"></script>
+<script src="/js/checkout.js"></script>
+<script>
+  (function () {
+    var items = RHSCart.getItems();
+    var summaryEl = document.getElementById("order-summary");
+    var form = document.getElementById("checkout-form");
+    var dateInput = document.getElementById("appointment-date");
+    var slotSection = document.getElementById("slot-section");
+    var slotGrid = document.getElementById("slot-grid");
+    var slotStatus = document.getElementById("slot-status");
+    var formStatus = document.getElementById("form-status");
+    var submitBtn = document.getElementById("submit-btn");
+    var selectedSlot = null;
+
+    if (window.RHS_CONFIG && RHS_CONFIG.timezoneLabel) {
+      document.getElementById("timezone-label").textContent = RHS_CONFIG.timezoneLabel;
+    }
+
+    if (!items.length) {
+      window.location.href = (RHS_CONFIG && RHS_CONFIG.cartUrl) || "/cart";
+      return;
+    }
+
+    summaryEl.innerHTML = items.map(function (item) {
+      return '<div class="order-line"><span>' + escapeHtml(item.name) + '</span><span>' +
+        escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price)) + "</span></div>";
+    }).join("") + '<div class="order-line"><strong>Estimated total</strong><strong>' +
+      escapeHtml(RHSCart.formatPrice(RHSCart.getTotal())) + "</strong></div>";
+
+    var today = new Date();
+    today.setDate(today.getDate() + 1);
+    dateInput.min = formatDateInput(today);
+    var maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 60);
+    dateInput.max = formatDateInput(maxDate);
+
+    dateInput.addEventListener("change", loadSlots);
+
+    function formatDateInput(date) {
+      var y = date.getFullYear();
+      var m = String(date.getMonth() + 1).padStart(2, "0");
+      var d = String(date.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + d;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function loadSlots() {
+      selectedSlot = null;
+      slotGrid.innerHTML = "";
+      slotStatus.textContent = "Loading available times...";
+      slotStatus.className = "status";
+      slotSection.hidden = false;
+
+      RHSCheckout.getAvailability(dateInput.value)
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error(response.error || "Could not load availability.");
+          }
+
+          if (!response.slots || !response.slots.length) {
+            slotStatus.textContent = "No open times on this date. Please choose another day.";
+            return;
+          }
+
+          slotStatus.textContent = "Select a time slot:";
+          response.slots.forEach(function (slot) {
+            var button = document.createElement("button");
+            button.type = "button";
+            button.className = "slot-btn";
+            button.textContent = slot.label;
+            button.setAttribute("data-slot-id", slot.id);
+            button.setAttribute("data-start", slot.start);
+            button.addEventListener("click", function () {
+              selectedSlot = { id: slot.id, start: slot.start };
+              slotGrid.querySelectorAll(".slot-btn").forEach(function (el) {
+                el.classList.remove("selected");
+              });
+              button.classList.add("selected");
+            });
+            slotGrid.appendChild(button);
+          });
+        })
+        .catch(function (error) {
+          slotStatus.textContent = error.message;
+          slotStatus.className = "status error";
+        });
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      formStatus.textContent = "";
+      formStatus.className = "status";
+
+      if (!selectedSlot) {
+        formStatus.textContent = "Please select an appointment time.";
+        formStatus.className = "status error";
+        return;
+      }
+
+      if (!window.RHS_CONFIG || !RHS_CONFIG.apiUrl || RHS_CONFIG.apiUrl.indexOf("YOUR_SCRIPT_ID") !== -1) {
+        formStatus.textContent = "Booking API is not configured. Set apiUrl in js/config.js.";
+        formStatus.className = "status error";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      formStatus.textContent = "Submitting your request...";
+
+      var order = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim(),
+        phone: form.phone.value.trim(),
+        address: form.address.value.trim(),
+        items: items,
+        estimatedTotal: RHSCart.getTotal(),
+        slotId: selectedSlot.id,
+        appointmentStart: selectedSlot.start,
+        appointmentDate: dateInput.value
+      };
+
+      RHSCheckout.submitOrder(order)
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error(response.error || "Submission failed.");
+          }
+
+          sessionStorage.setItem("rhs_last_order", JSON.stringify({
+            orderId: response.orderId,
+            name: order.name,
+            appointmentStart: order.appointmentStart
+          }));
+          RHSCart.clear();
+
+          var confirmationUrl = (RHS_CONFIG && RHS_CONFIG.confirmationUrl) || "/confirmation";
+          window.location.href = confirmationUrl + "?orderId=" + encodeURIComponent(response.orderId);
+        })
+        .catch(function (error) {
+          formStatus.textContent = error.message;
+          formStatus.className = "status error";
+          submitBtn.disabled = false;
+        });
+    });
+  })();
+</script>
+
+</body>
+</html>

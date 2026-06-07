@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmed | Ryan's Home Solutions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+
+<div class="page-site-header">
+  <span>Ryan's Home Solutions</span>
+  <a data-cart-link href="/cart">Cart (<span data-cart-count>0</span>)</a>
+</div>
+
+<div class="confirm-wrap">
+  <h1>Booking Request Received</h1>
+  <p class="muted">Thank you! We received your service request and will be in touch shortly.</p>
+
+  <div class="card card-padded" id="confirmation-details">
+    <p><strong>Order ID:</strong> <span id="order-id">—</span></p>
+    <p><strong>Name:</strong> <span id="order-name">—</span></p>
+    <p><strong>Appointment:</strong> <span id="order-appointment">—</span></p>
+    <p class="muted">A confirmation email has been sent to you. No payment is due now.</p>
+  </div>
+
+  <a class="btn btn-primary" href="/services/">Back to Services</a>
+</div>
+
+<script src="/js/config.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    var orderId = params.get("orderId") || "—";
+    var stored = null;
+
+    try {
+      stored = JSON.parse(sessionStorage.getItem("rhs_last_order") || "null");
+    } catch (e) {
+      stored = null;
+    }
+
+    document.getElementById("order-id").textContent = orderId;
+    document.getElementById("order-name").textContent = stored && stored.name ? stored.name : "—";
+
+    if (stored && stored.appointmentStart) {
+      document.getElementById("order-appointment").textContent = formatLocalDateTime(stored.appointmentStart);
+    } else {
+      document.getElementById("order-appointment").textContent = "—";
+    }
+
+    function formatLocalDateTime(value) {
+      var parts = value.split("T");
+      var dateParts = parts[0].split("-");
+      var timeParts = parts[1].split(":");
+      var date = new Date(
+        Number(dateParts[0]),
+        Number(dateParts[1]) - 1,
+        Number(dateParts[2]),
+        Number(timeParts[0]),
+        Number(timeParts[1])
+      );
+      return date.toLocaleString(undefined, {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>
