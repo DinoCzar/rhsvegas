@@ -14,6 +14,11 @@
       .replace(/"/g, "&quot;");
   }
 
+  function getItemLabel(item) {
+    var nameEl = item.querySelector("span:first-child");
+    return nameEl ? nameEl.textContent : item.textContent;
+  }
+
   function formatPrice(service) {
     if (service.priceLabel) {
       return service.priceLabel;
@@ -84,7 +89,6 @@
     var resultsEl = ensureResultsContainer();
     var emptyMsg = document.querySelector(".service-search-no-results");
     var grid = document.querySelector(".service-grid");
-    var accordion = document.querySelector(".accordion-container");
     var q = normalize(query);
     var matches = searchCatalog(query);
 
@@ -98,9 +102,6 @@
       if (grid) {
         grid.classList.remove("search-hidden");
       }
-      if (accordion) {
-        accordion.classList.remove("search-hidden");
-      }
       if (emptyMsg) {
         emptyMsg.hidden = true;
       }
@@ -109,9 +110,6 @@
 
     if (grid) {
       grid.classList.add("search-hidden");
-    }
-    if (accordion) {
-      accordion.classList.add("search-hidden");
     }
 
     if (!matches.length) {
@@ -159,36 +157,71 @@
       return;
     }
 
+    var categories = container.querySelectorAll(".category");
+    var anyVisible = false;
     var q = normalize(query);
 
-    if (q) {
-      container.classList.add("search-hidden");
-      if (emptyMsg) {
-        emptyMsg.hidden = true;
-      }
-      return;
-    }
-
-    container.classList.remove("search-hidden");
-
-    container.querySelectorAll(".category").forEach(function (category) {
+    categories.forEach(function (category) {
       var btn = category.querySelector(".dropdown-btn");
       var content = category.querySelector(".content");
+      var categoryLabel = btn ? btn.querySelector("span:first-child").textContent : "";
+      var categoryMatch = q && normalize(categoryLabel).indexOf(q) !== -1;
+      var visibleItems = 0;
 
-      category.classList.remove("search-hidden");
       category.querySelectorAll(".item").forEach(function (item) {
-        item.classList.remove("search-hidden");
+        var label = getItemLabel(item);
+        var match = !q || normalize(label).indexOf(q) !== -1 || categoryMatch;
+
+        if (match) {
+          item.classList.remove("search-hidden");
+          visibleItems += 1;
+          anyVisible = true;
+        } else {
+          item.classList.add("search-hidden");
+        }
       });
-      if (content) {
-        content.style.display = "";
+
+      if (!q) {
+        category.classList.remove("search-hidden");
+        category.querySelectorAll(".item").forEach(function (item) {
+          item.classList.remove("search-hidden");
+        });
+        if (content) {
+          content.style.display = "";
+        }
+        if (btn) {
+          btn.classList.remove("active");
+        }
+        return;
       }
-      if (btn) {
-        btn.classList.remove("active");
+
+      if (visibleItems > 0 || categoryMatch) {
+        category.classList.remove("search-hidden");
+        anyVisible = true;
+        if (content) {
+          content.style.display = "block";
+        }
+        if (btn) {
+          btn.classList.add("active");
+        }
+        if (categoryMatch) {
+          category.querySelectorAll(".item").forEach(function (item) {
+            item.classList.remove("search-hidden");
+          });
+        }
+      } else {
+        category.classList.add("search-hidden");
+        if (content) {
+          content.style.display = "none";
+        }
+        if (btn) {
+          btn.classList.remove("active");
+        }
       }
     });
 
     if (emptyMsg) {
-      emptyMsg.hidden = true;
+      emptyMsg.hidden = !q || anyVisible;
     }
   }
 
@@ -207,9 +240,16 @@
 
   function onSearchInput(event) {
     var query = event.target.value;
-    renderGlobalResults(query);
-    filterAccordion(query);
-    filterServiceTiles(query);
+
+    if (document.querySelector(".service-grid")) {
+      renderGlobalResults(query);
+      filterServiceTiles(query);
+      return;
+    }
+
+    if (document.querySelector(".accordion-container")) {
+      filterAccordion(query);
+    }
   }
 
   function onResultsClick(event) {
@@ -232,13 +272,15 @@
       return;
     }
 
-    var resultsEl = ensureResultsContainer();
+    if (document.querySelector(".service-grid")) {
+      var resultsEl = ensureResultsContainer();
+      if (resultsEl) {
+        resultsEl.addEventListener("click", onResultsClick);
+      }
+    }
+
     input.addEventListener("input", onSearchInput);
     input.addEventListener("search", onSearchInput);
-
-    if (resultsEl) {
-      resultsEl.addEventListener("click", onResultsClick);
-    }
   }
 
   if (document.readyState === "loading") {
