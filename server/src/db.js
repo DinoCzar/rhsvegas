@@ -28,7 +28,25 @@ db.exec(`
     user_id INTEGER NOT NULL,
     start_at TEXT NOT NULL,
     end_at TEXT NOT NULL,
+    generated INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS weekly_availability (
+    user_id INTEGER NOT NULL,
+    day_of_week INTEGER NOT NULL,
+    start_hour INTEGER NOT NULL,
+    PRIMARY KEY (user_id, day_of_week, start_hour),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS date_availability_overrides (
+    user_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    start_hour INTEGER NOT NULL,
+    enabled INTEGER NOT NULL,
+    PRIMARY KEY (user_id, date, start_hour),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 
@@ -51,5 +69,11 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 `);
+
+try {
+  db.exec("ALTER TABLE availability_slots ADD COLUMN generated INTEGER NOT NULL DEFAULT 0");
+} catch (err) {
+  // column already exists
+}
 
 module.exports = db;

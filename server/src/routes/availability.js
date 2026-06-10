@@ -7,6 +7,7 @@ const {
   parseLocalDateTime,
   toIsoLocal
 } = require("../utils");
+const schedule = require("../services/availability-schedule");
 
 const router = express.Router();
 
@@ -91,6 +92,118 @@ router.get("/manage", authRequired, (req, res) => {
   res.json({ ok: true, slots: rows });
 });
 
+function resolveScheduleUserId(req) {
+  if (req.user.role === "admin" && req.query.userId) {
+    const targetUserId = Number(req.query.userId);
+    const exists = db.prepare("SELECT id FROM users WHERE id = ? AND active = 1").get(targetUserId);
+    if (!exists) {
+      return null;
+    }
+    return targetUserId;
+  }
+  return req.user.id;
+}
+
+/** Weekly recurring schedule */
+router.get("/schedule/weekly", authRequired, (req, res) => {
+  const userId = resolveScheduleUserId(req);
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: "Employee not found." });
+  }
+  res.json({
+    ok: true,
+    horizon: schedule.scheduleHorizon(),
+    schedule: schedule.getWeeklySchedule(userId)
+  });
+});
+
+router.put("/schedule/weekly", authRequired, (req, res) => {
+  try {
+    const userId = schedule.resolveTargetUserId(req, req.body?.userId);
+    const enabledSlots = schedule.normalizeEnabledSlots(req.body?.enabledSlots);
+    schedule.saveWeeklySchedule(userId, enabledSlots);
+    res.json({
+      ok: true,
+      schedule: schedule.getWeeklySchedule(userId)
+    });
+  } catch (err) {
+    if (err.message === "EMPLOYEE_NOT_FOUND") {
+      return res.status(400).json({ ok: false, error: "Employee not found." });
+    }
+    throw err;
+  }
+});
+
+/** Per-date adjustments (overrides weekly defaults) */
+router.get("/schedule/date/:date", authRequired, (req, res) => {
+  const userId = resolveScheduleUserId(req);
+  if (!userId) {
+    return res.status(400).json({ ok: false, error: "Employee not found." });
+  }
+  try {
+    res.json({
+      ok: true,
+      day: schedule.getDateSchedule(userId, req.params.date)
+    });
+  } catch (err) {
+    if (err.message === "INVALID_DATE") {
+      return res.status(400).json({ ok: false, error: "Invalid date format." });
+    }
+    if (err.message === "DATE_OUT_OF_RANGE") {
+      return res.status(400).json({
+        ok: false,
+        error: "Date must be within the next " + schedule.SCHEDULE_WEEKS + " weeks."
+      });
+    }
+    throw err;
+  }
+});
+
+router.put("/schedule/date/:date", authRequired, (req, res) => {
+  try {
+    const userId = schedule.resolveTargetUserId(req, req.body?.userId);
+    const hourStates = schedule.normalizeHourStates(req.body?.hours);
+    schedule.saveDateOverrides(userId, req.params.date, hourStates);
+    res.json({
+      ok: true,
+      day: schedule.getDateSchedule(userId, req.params.date)
+    });
+  } catch (err) {
+    if (err.message === "EMPLOYEE_NOT_FOUND") {
+      return res.status(400).json({ ok: false, error: "Employee not found." });
+    }
+    if (err.message === "DATE_OUT_OF_RANGE") {
+      return res.status(400).json({
+        ok: false,
+        error: "Date must be within the next " + schedule.SCHEDULE_WEEKS + " weeks."
+      });
+    }
+    throw err;
+  }
+});
+
+router.delete("/schedule/date/:date", authRequired, (req, res) => {
+  try {
+    const userId = schedule.resolveTargetUserId(req, req.query.userId);
+    schedule.clearDateOverrides(userId, req.params.date);
+    res.json({
+      ok: true,
+      day: schedule.getDateSchedule(userId, req.params.date)
+    });
+  } catch (err) {
+    if (err.message === "EMPLOYEE_NOT_FOUND") {
+      return res.status(400).json({ ok: false, error: "Employee not found." });
+    }
+    if (err.message === "DATE_OUT_OF_RANGE") {
+      return res.status(400).json({
+        ok: false,
+        error: "Date must be within the next " + schedule.SCHEDULE_WEEKS + " weeks."
+      });
+    }
+    throw err;
+  }
+});
+
 /** Add availability slot */
 router.post("/", authRequired, (req, res) => {
   const { date, startTime, endTime, userId } = req.body || {};
@@ -144,7 +257,7 @@ router.post("/", authRequired, (req, res) => {
 
   const result = db
     .prepare(
-      "INSERT INTO availability_slots (user_id, start_at, end_at) VALUES (?, ?, ?)"
+      "INSERT INTO availability_slots (user_id, start_at, end_at, generated) VALUES (?, ?, ?, 0)"
     )
     .run(targetUserId, startAt, endAt);
 

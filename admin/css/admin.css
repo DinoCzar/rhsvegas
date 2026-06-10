@@ -47,7 +47,7 @@ body {
 }
 
 .admin-wrap {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 24px 16px 48px;
 }
@@ -222,4 +222,104 @@ select {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #666;
+}
+
+.card-help {
+  margin: -8px 0 16px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.schedule-grid-wrap {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.schedule-grid {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.schedule-grid th,
+.schedule-grid td {
+  text-align: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.schedule-grid th:first-child,
+.schedule-grid td:first-child {
+  text-align: left;
+  font-weight: 700;
+  color: var(--rhs-blue);
+}
+
+.slot-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.slot-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.date-override-times {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.date-hour-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.date-hour-toggle input {
+  width: auto;
+  margin: 0;
+}
+
+.override-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #8a6d3b;
+  background: #fff3cd;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--rhs-blue);
+  border: 1px solid var(--rhs-blue);
+  padding: 12px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
 }
