@@ -2,7 +2,9 @@
   /** GoDaddy domain → Render. Update if your Render service names differ. */
   var PRODUCTION_SITE_HOSTS = ["rhsvegas.com", "www.rhsvegas.com"];
   var RENDER_API_ORIGIN = "https://rhsvegas-api-c5y0.onrender.com";
-  var PRODUCTION_API_ORIGIN = "https://api.rhsvegas.com";
+  // Use Render hostname until api.rhsvegas.com loads reliably in your browser.
+  // After https://api.rhsvegas.com/api/health works, switch back to that URL.
+  var PRODUCTION_API_ORIGIN = RENDER_API_ORIGIN;
 
   function apiOrigin() {
     var host = window.location.hostname;
