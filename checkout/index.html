@@ -133,7 +133,7 @@
     today.setDate(today.getDate() + 1);
     dateInput.min = formatDateInput(today);
     var maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 60);
+    maxDate.setDate(maxDate.getDate() + 12 * 7);
     dateInput.max = formatDateInput(maxDate);
 
     dateInput.addEventListener("change", loadSlots);

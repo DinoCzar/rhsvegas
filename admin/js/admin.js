@@ -73,6 +73,41 @@
       return api("/availability/manage" + q);
     },
 
+    fetchWeeklySchedule: function (userId) {
+      var q = userId ? "?userId=" + encodeURIComponent(userId) : "";
+      return api("/availability/schedule/weekly" + q);
+    },
+
+    saveWeeklySchedule: function (enabledSlots, userId) {
+      var payload = { enabledSlots: enabledSlots };
+      if (userId) payload.userId = Number(userId);
+      return api("/availability/schedule/weekly", {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+    },
+
+    fetchDateSchedule: function (date, userId) {
+      var q = userId ? "?userId=" + encodeURIComponent(userId) : "";
+      return api("/availability/schedule/date/" + encodeURIComponent(date) + q);
+    },
+
+    saveDateSchedule: function (date, hours, userId) {
+      var payload = { hours: hours };
+      if (userId) payload.userId = Number(userId);
+      return api("/availability/schedule/date/" + encodeURIComponent(date), {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+    },
+
+    resetDateSchedule: function (date, userId) {
+      var q = userId ? "?userId=" + encodeURIComponent(userId) : "";
+      return api("/availability/schedule/date/" + encodeURIComponent(date) + q, {
+        method: "DELETE"
+      });
+    },
+
     addSlot: function (payload) {
       return api("/availability", {
         method: "POST",
