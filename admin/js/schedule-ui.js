@@ -295,13 +295,18 @@
 
         res.slots.forEach(function (slot) {
           var li = document.createElement("li");
-          var booked = slot.booking_id
-            ? '<span class="badge-booked">Booked ' + escapeHtml(slot.order_id || "") + "</span>"
-            : "";
+          var badge = "";
+          if (slot.booking_id) {
+            if (slot.booking_status === "pending") {
+              badge = '<span class="badge-pending">Pending ' + escapeHtml(slot.order_id || "") + "</span>";
+            } else {
+              badge = '<span class="badge-booked">Booked ' + escapeHtml(slot.order_id || "") + "</span>";
+            }
+          }
           li.innerHTML =
             "<div><strong>" + formatRange(slot.start_at, slot.end_at) + "</strong>" +
             (slot.employee_name ? '<div class="slot-meta">' + escapeHtml(slot.employee_name) + "</div>" : "") +
-            "</div><div>" + booked + "</div>";
+            "</div><div>" + badge + "</div>";
           slotList.appendChild(li);
         });
       })
@@ -351,13 +356,19 @@
     if (user.role === "admin") {
       employeeWrap.classList.remove("hidden");
       adminCard.classList.remove("hidden");
-      loadEmployees().then(reloadAll);
+      loadEmployees().then(function () {
+        reloadAll();
+        document.dispatchEvent(new Event("rhs-admin-ready"));
+      });
     } else {
       employeeWrap.classList.add("hidden");
       adminCard.classList.add("hidden");
       reloadAll();
+      document.dispatchEvent(new Event("rhs-admin-ready"));
     }
   }
+
+  window.RHSReloadAvailability = reloadAll;
 
   document.getElementById("login-form").addEventListener("submit", function (e) {
     e.preventDefault();

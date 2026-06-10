@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 const config = require("../config");
-const { formatDateTimeLong } = require("../utils");
+const { formatDateTimeLong, businessNowIso } = require("../utils");
 
 let transporter = null;
 
@@ -22,54 +22,43 @@ function getTransporter() {
   return transporter;
 }
 
-async function sendBookingEmails(booking, items, employeeName) {
-  const lines = items
-    .map((item, i) => {
+function formatItemsList(items) {
+  return items
+    .map(function (item, i) {
       const label = item.priceLabel || "$" + (item.price || 0);
-      return `${i + 1}. ${item.name} — ${label}`;
+      return i + 1 + ". " + item.name + " — " + label;
     })
     .join("\n");
+}
 
+async function sendNewBookingRequestEmail(booking, items, employeeName) {
+  const lines = formatItemsList(items);
   const appointment = formatDateTimeLong(booking.start_at);
   const ownerBody = [
-    `New service request — ${config.businessName}`,
+    "New booking request — " + config.businessName,
     "",
-    `Order ID: ${booking.order_id}`,
+    "Order ID: " + booking.order_id,
+    "Status: Pending approval",
     "",
     "CUSTOMER",
-    `Name: ${booking.customer_name}`,
-    `Email: ${booking.customer_email}`,
-    `Phone: ${booking.customer_phone}`,
-    `Address: ${booking.customer_address}`,
+    "Name: " + booking.customer_name,
+    "Email: " + booking.customer_email,
+    "Phone: " + booking.customer_phone,
+    "Address: " + booking.customer_address,
     "",
     "SERVICES",
     lines,
     "",
-    `Estimated total: $${Number(booking.estimated_total).toFixed(0)}`,
+    "Estimated total: $" + Number(booking.estimated_total).toFixed(0),
     "Note: No payment collected online.",
     "",
-    "APPOINTMENT",
-    `${appointment}`,
-    `Assigned to: ${employeeName}`,
+    "REQUESTED APPOINTMENT",
+    appointment,
+    "Assigned to: " + employeeName,
     "",
-    `Submitted: ${new Date().toLocaleString("en-US", { timeZone: config.timezone })}`
-  ].join("\n");
-
-  const customerBody = [
-    `Hi ${booking.customer_name},`,
+    "Review and approve or deny this request in the staff portal.",
     "",
-    `Thank you for choosing ${config.businessName}.`,
-    "",
-    `We received your service request (${booking.order_id}).`,
-    "",
-    "Requested services:",
-    lines,
-    "",
-    `Appointment: ${appointment}`,
-    "",
-    "No payment is due now. We will confirm your appointment shortly.",
-    "",
-    `— ${config.businessName}`
+    "Submitted: " + businessNowIso().replace("T", " ") + " PT"
   ].join("\n");
 
   const transport = getTransporter();
@@ -82,19 +71,58 @@ async function sendBookingEmails(booking, items, employeeName) {
     await transport.sendMail({
       from: config.smtp.from,
       to: config.ownerEmail,
-      subject: `New booking ${booking.order_id} — ${booking.customer_name}`,
+      subject: "Booking request " + booking.order_id + " — " + booking.customer_name,
       text: ownerBody
     });
+  }
+
+  return { sent: true };
+}
+
+async function sendBookingConfirmationEmail(booking, items, employeeName) {
+  const lines = formatItemsList(items);
+  const appointment = formatDateTimeLong(booking.start_at);
+  const customerBody = [
+    "Hi " + booking.customer_name + ",",
+    "",
+    "Your appointment with " + config.businessName + " is confirmed.",
+    "",
+    "Order ID: " + booking.order_id,
+    "",
+    "Services:",
+    lines,
+    "",
+    "Appointment: " + appointment,
+    "",
+    "No payment is due now. We look forward to seeing you.",
+    "",
+    "— " + config.businessName
+  ].join("\n");
+
+  const transport = getTransporter();
+  if (!transport) {
+    console.log("[email] SMTP not configured. Customer confirmation:\n", customerBody);
+    return { sent: false };
   }
 
   await transport.sendMail({
     from: config.smtp.from,
     to: booking.customer_email,
-    subject: `We received your service request — ${config.businessName}`,
+    subject: "Appointment confirmed — " + config.businessName,
     text: customerBody
   });
 
   return { sent: true };
 }
 
-module.exports = { sendBookingEmails };
+/** @deprecated Use sendNewBookingRequestEmail + sendBookingConfirmationEmail */
+async function sendBookingEmails(booking, items, employeeName) {
+  await sendNewBookingRequestEmail(booking, items, employeeName);
+  return sendBookingConfirmationEmail(booking, items, employeeName);
+}
+
+module.exports = {
+  sendNewBookingRequestEmail,
+  sendBookingConfirmationEmail,
+  sendBookingEmails
+};

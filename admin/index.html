@@ -27,7 +27,7 @@
 <div id="app-view" class="hidden">
   <header class="admin-header">
     <div>
-      <h1>Ryan's Home Solutions — Availability</h1>
+      <h1>Ryan's Home Solutions — Staff Portal</h1>
       <div class="user-badge" id="user-label"></div>
     </div>
     <button type="button" id="logout-btn">Sign Out</button>
@@ -37,6 +37,13 @@
     <div id="employee-select-wrap" class="card hidden">
       <label for="employee-select">Managing availability for</label>
       <select id="employee-select"></select>
+    </div>
+
+    <div class="card hidden" id="booking-requests-card">
+      <h2>Booking Requests</h2>
+      <p class="card-help">Review customer booking requests. Approve to confirm the appointment and email the customer.</p>
+      <p class="status" id="booking-requests-status">Loading…</p>
+      <ul class="booking-list" id="booking-requests-list"></ul>
     </div>
 
     <div class="card">
@@ -109,8 +116,9 @@
   </div>
 </div>
 
-<script src="js/admin.js?v=20260610b"></script>
-<script src="js/schedule-ui.js?v=20260610b"></script>
+<script src="js/admin.js?v=20260610c"></script>
+<script src="js/schedule-ui.js?v=20260610c"></script>
+<script src="js/bookings-ui.js?v=20260610c"></script>
 
 </body>
 </html>
