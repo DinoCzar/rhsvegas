@@ -190,7 +190,7 @@ function syncGeneratedSlotsForDate(userId, dateStr) {
         `
         SELECT s.id, s.generated, b.id AS booking_id
         FROM availability_slots s
-        LEFT JOIN bookings b ON b.slot_id = s.id
+        LEFT JOIN bookings b ON b.slot_id = s.id AND b.status IN ('pending', 'approved')
         WHERE s.user_id = ? AND s.start_at = ? AND s.end_at = ?
       `
       )
@@ -221,7 +221,7 @@ function syncGeneratedSlots(userId) {
     DELETE FROM availability_slots
     WHERE user_id = ?
       AND generated = 1
-      AND id NOT IN (SELECT slot_id FROM bookings WHERE slot_id IS NOT NULL)
+      AND id NOT IN (SELECT slot_id FROM bookings WHERE status IN ('pending', 'approved') AND slot_id IS NOT NULL)
       AND start_at >= ?
       AND start_at <= ?
   `
@@ -291,7 +291,7 @@ function isBookableSlot(userId, dateStr, startHour, nowIso) {
       `
       SELECT b.id AS booking_id
       FROM availability_slots s
-      LEFT JOIN bookings b ON b.slot_id = s.id
+      LEFT JOIN bookings b ON b.slot_id = s.id AND b.status IN ('pending', 'approved')
       WHERE s.user_id = ? AND s.start_at = ? AND s.end_at = ?
     `
     )
@@ -359,7 +359,7 @@ function getPublicSlotsForDate(dateStr) {
       SELECT s.id, s.start_at, s.end_at, u.name AS employee_name
       FROM availability_slots s
       JOIN users u ON u.id = s.user_id AND u.active = 1
-      LEFT JOIN bookings b ON b.slot_id = s.id
+      LEFT JOIN bookings b ON b.slot_id = s.id AND b.status IN ('pending', 'approved')
       WHERE b.id IS NULL
         AND s.generated = 1
         AND s.start_at >= ?

@@ -78,7 +78,7 @@
 
     <div class="card card-padded">
       <h2>Select Appointment</h2>
-      <p class="help-text">Choose from dates and times your team has marked available (<span id="timezone-label">Pacific Time</span>).</p>
+      <p class="help-text">Submit your request for review. You'll receive a confirmation email once we approve your appointment.</p>
       <div>
         <label for="appointment-date">Preferred Date *</label>
         <select id="appointment-date" name="appointmentDate" required>
@@ -88,6 +88,7 @@
       </div>
       <div id="slot-section" hidden>
         <label>Available Times *</label>
+        <p class="help-text">All times are in <span id="timezone-label">Pacific Time</span>.</p>
         <div class="slot-grid" id="slot-grid"></div>
         <p class="status" id="slot-status"></p>
       </div>

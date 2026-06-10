@@ -1,9 +1,10 @@
 const express = require("express");
 const db = require("../db");
 const { makeOrderId, isValidEmail, isWallClockPast } = require("../utils");
-const { sendBookingEmails } = require("../services/email");
+const { sendNewBookingRequestEmail } = require("../services/email");
 const { validateOrderItems } = require("../services/pricing");
 const { checkoutLimiter } = require("../middleware/rate-limit");
+const { BOOKING_STATUS } = require("../constants/bookings");
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ router.post("/", checkoutLimiter, async (req, res) => {
   const required = ["name", "address", "email", "phone", "slotId"];
   for (const field of required) {
     if (!order[field] || String(order[field]).trim() === "") {
-      return res.status(400).json({ ok: false, error: `Missing required field: ${field}` });
+      return res.status(400).json({ ok: false, error: "Missing required field: " + field });
     }
   }
 
@@ -28,7 +29,7 @@ router.post("/", checkoutLimiter, async (req, res) => {
 
   for (const field of ["name", "address", "phone"]) {
     if (String(order[field]).trim().length > MAX_FIELD_LENGTH) {
-      return res.status(400).json({ ok: false, error: `Field too long: ${field}` });
+      return res.status(400).json({ ok: false, error: "Field too long: " + field });
     }
   }
 
@@ -48,14 +49,13 @@ router.post("/", checkoutLimiter, async (req, res) => {
   const slotId = Number(order.slotId);
   const orderId = makeOrderId();
 
-  const book = db.transaction(() => {
+  const book = db.transaction(function () {
     const slot = db
       .prepare(
         `
         SELECT s.*, u.name AS employee_name
         FROM availability_slots s
         JOIN users u ON u.id = s.user_id AND u.active = 1
-        LEFT JOIN bookings b ON b.slot_id = s.id
         WHERE s.id = ?
       `
       )
@@ -65,7 +65,11 @@ router.post("/", checkoutLimiter, async (req, res) => {
       throw new Error("SLOT_NOT_FOUND");
     }
 
-    const existing = db.prepare("SELECT id FROM bookings WHERE slot_id = ?").get(slotId);
+    const existing = db
+      .prepare(
+        "SELECT id FROM bookings WHERE slot_id = ? AND status IN ('pending', 'approved')"
+      )
+      .get(slotId);
     if (existing) {
       throw new Error("SLOT_TAKEN");
     }
@@ -79,8 +83,8 @@ router.post("/", checkoutLimiter, async (req, res) => {
       INSERT INTO bookings (
         order_id, slot_id, user_id,
         customer_name, customer_email, customer_phone, customer_address,
-        items_json, estimated_total
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        items_json, estimated_total, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
     ).run(
       orderId,
@@ -91,14 +95,17 @@ router.post("/", checkoutLimiter, async (req, res) => {
       order.phone.trim(),
       order.address.trim(),
       JSON.stringify(validatedItems.items),
-      validatedItems.estimatedTotal
+      validatedItems.estimatedTotal,
+      BOOKING_STATUS.PENDING
     );
 
-    return { slot, orderId };
+    return { slot: slot, orderId: orderId };
   });
 
   try {
-    const { slot, orderId: id } = book();
+    const result = book();
+    const slot = result.slot;
+    const id = result.orderId;
 
     const booking = {
       order_id: id,
@@ -112,7 +119,7 @@ router.post("/", checkoutLimiter, async (req, res) => {
     };
 
     try {
-      await sendBookingEmails(booking, validatedItems.items, slot.employee_name);
+      await sendNewBookingRequestEmail(booking, validatedItems.items, slot.employee_name);
     } catch (emailErr) {
       console.error("[email] Failed to send:", emailErr.message);
     }
@@ -120,6 +127,7 @@ router.post("/", checkoutLimiter, async (req, res) => {
     res.json({
       ok: true,
       orderId: id,
+      status: BOOKING_STATUS.PENDING,
       appointmentStart: slot.start_at,
       employeeName: slot.employee_name
     });
@@ -129,7 +137,7 @@ router.post("/", checkoutLimiter, async (req, res) => {
       return res.status(404).json({ ok: false, error: "Selected time slot not found." });
     }
     if (code === "SLOT_TAKEN") {
-      return res.status(409).json({ ok: false, error: "That time was just booked. Please choose another." });
+      return res.status(409).json({ ok: false, error: "That time was just requested. Please choose another." });
     }
     if (code === "SLOT_PAST") {
       return res.status(400).json({ ok: false, error: "That time slot is no longer available." });

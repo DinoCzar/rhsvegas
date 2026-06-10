@@ -80,10 +80,10 @@ router.get("/manage", authRequired, (req, res) => {
   let sql = `
     SELECT s.id, s.user_id, s.start_at, s.end_at, s.created_at,
            u.name AS employee_name,
-           b.id AS booking_id, b.order_id
+           b.id AS booking_id, b.order_id, b.status AS booking_status
     FROM availability_slots s
     JOIN users u ON u.id = s.user_id
-    LEFT JOIN bookings b ON b.slot_id = s.id
+    LEFT JOIN bookings b ON b.slot_id = s.id AND b.status IN ('pending', 'approved')
     WHERE 1=1
   `;
   const params = [];
@@ -297,9 +297,9 @@ router.delete("/:id", authRequired, (req, res) => {
   const slot = db
     .prepare(
       `
-      SELECT s.*, b.id AS booking_id
+      SELECT s.*, b.id AS booking_id, b.status AS booking_status
       FROM availability_slots s
-      LEFT JOIN bookings b ON b.slot_id = s.id
+      LEFT JOIN bookings b ON b.slot_id = s.id AND b.status IN ('pending', 'approved')
       WHERE s.id = ?
     `
     )
@@ -311,7 +311,7 @@ router.delete("/:id", authRequired, (req, res) => {
   if (req.user.role !== "admin" && slot.user_id !== req.user.id) {
     return res.status(403).json({ ok: false, error: "You can only delete your own slots." });
   }
-  if (slot.booking_id) {
+  if (slot.booking_id && slot.booking_status !== "denied") {
     return res.status(409).json({ ok: false, error: "Cannot delete a booked slot." });
   }
 

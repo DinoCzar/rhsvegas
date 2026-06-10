@@ -8,6 +8,7 @@ const { ensureAdminUser } = require("./bootstrap-admin");
 const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
+const bookingsRoutes = require("./routes/bookings");
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/checkout", checkoutRoutes);
+app.use("/api/bookings", bookingsRoutes);
 
 var adminCandidates = [
   path.join(__dirname, "../../admin"),

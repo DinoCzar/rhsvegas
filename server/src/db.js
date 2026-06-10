@@ -56,7 +56,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id TEXT NOT NULL UNIQUE,
-    slot_id INTEGER NOT NULL UNIQUE,
+    slot_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     customer_name TEXT NOT NULL,
     customer_email TEXT NOT NULL,
@@ -64,9 +64,13 @@ db.exec(`
     customer_address TEXT NOT NULL,
     items_json TEXT NOT NULL,
     estimated_total REAL NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'pending',
+    reviewed_at TEXT,
+    reviewed_by INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (slot_id) REFERENCES availability_slots(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (reviewed_by) REFERENCES users(id)
   );
 `);
 
@@ -74,6 +78,34 @@ try {
   db.exec("ALTER TABLE availability_slots ADD COLUMN generated INTEGER NOT NULL DEFAULT 0");
 } catch (err) {
   // column already exists
+}
+
+try {
+  db.exec("ALTER TABLE bookings ADD COLUMN status TEXT NOT NULL DEFAULT 'approved'");
+} catch (err) {
+  // column already exists
+}
+
+try {
+  db.exec("ALTER TABLE bookings ADD COLUMN reviewed_at TEXT");
+} catch (err) {
+  // column already exists
+}
+
+try {
+  db.exec("ALTER TABLE bookings ADD COLUMN reviewed_by INTEGER");
+} catch (err) {
+  // column already exists
+}
+
+try {
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_active_slot
+      ON bookings(slot_id)
+      WHERE status IN ('pending', 'approved')
+  `);
+} catch (err) {
+  // index already exists or table needs rebuild on legacy DBs
 }
 
 module.exports = db;

@@ -128,6 +128,19 @@
         method: "POST",
         body: JSON.stringify(payload)
       });
+    },
+
+    fetchBookingRequests: function (status) {
+      var q = status ? "?status=" + encodeURIComponent(status) : "";
+      return api("/bookings/requests" + q);
+    },
+
+    approveBooking: function (id) {
+      return api("/bookings/" + encodeURIComponent(id) + "/approve", { method: "POST" });
+    },
+
+    denyBooking: function (id) {
+      return api("/bookings/" + encodeURIComponent(id) + "/deny", { method: "POST" });
     }
   };
 })();
