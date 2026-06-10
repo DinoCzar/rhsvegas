@@ -1,35 +1,36 @@
-window.RHS_CONFIG = {
-  apiUrl: (function () {
+(function () {
+  /** GoDaddy domain → Render. Update if your Render service names differ. */
+  var PRODUCTION_SITE_HOSTS = ["rhsvegas.com", "www.rhsvegas.com"];
+  var PRODUCTION_API_ORIGIN = "https://api.rhsvegas.com";
+  var RENDER_API_ORIGIN = "https://rhsvegas-api-c5y0.onrender.com";
+
+  function apiOrigin() {
     var host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1") {
-      return "http://localhost:3001/api";
+      return "http://localhost:3001";
     }
-    if (host === "rhsvegas.com" || host === "www.rhsvegas.com") {
-      return "https://api.rhsvegas.com/api";
+    if (PRODUCTION_SITE_HOSTS.indexOf(host) !== -1) {
+      return PRODUCTION_API_ORIGIN;
     }
-    return "https://rhsvegas-api-c5y0.onrender.com/api";
-  })(),
+    return RENDER_API_ORIGIN;
+  }
 
-  adminUrl: (function () {
-    var host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") {
-      return "http://localhost:3001/admin/";
-    }
-    if (host === "rhsvegas.com" || host === "www.rhsvegas.com") {
-      return "https://api.rhsvegas.com/admin/";
-    }
-    return "https://rhsvegas-api-c5y0.onrender.com/admin/";
-  })(),
+  var origin = apiOrigin();
 
-  homeUrl: "/",
-  cartUrl: "/cart",
-  checkoutUrl: "/checkout",
-  confirmationUrl: "/confirmation",
-  servicesUrl: "/services",
-  assemblyUrl: "/assembly",
-  installationUrl: "/installation",
-  otherServicesUrl: "/other-services",
+  window.RHS_CONFIG = {
+    apiUrl: origin + "/api",
+    adminUrl: origin + "/admin/",
 
-  businessName: "Ryan's Home Solutions",
-  timezoneLabel: "Pacific Time (Las Vegas)"
-};
+    homeUrl: "/",
+    cartUrl: "/cart",
+    checkoutUrl: "/checkout",
+    confirmationUrl: "/confirmation",
+    servicesUrl: "/services",
+    assemblyUrl: "/assembly",
+    installationUrl: "/installation",
+    otherServicesUrl: "/other-services",
+
+    businessName: "Ryan's Home Solutions",
+    timezoneLabel: "Pacific Time (Las Vegas)"
+  };
+})();

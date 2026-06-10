@@ -1,14 +1,16 @@
 # Ryan's Home Solutions — Setup Guide
 
-Static site (GitHub Pages) + Node.js booking server + staff availability portal.
+Static site on **Render** + Node.js booking API + staff portal. Domain at **GoDaddy** (`rhsvegas.com`).
+
+**Production deploy:** see [RENDER-GODADDY.md](RENDER-GODADDY.md)
 
 ## Architecture
 
 | Part | Purpose |
 |------|---------|
-| **Website** (`index.html`, `assembly/`, etc.) | Customer-facing pages, cart in `localStorage` |
-| **API server** (`server/`) | Stores availability, bookings, employee accounts |
-| **Staff portal** (`admin/`) | Employees log in and set open appointment times |
+| **Website** (`index.html`, `assembly/`, etc.) | Customer-facing pages on Render static site |
+| **API server** (`server/`) | Bookings, availability, SQLite database on Render |
+| **Staff portal** (`admin/`) | Served from API at `/admin/` |
 
 Customers pick from **staff-entered availability** at checkout — not Google Calendar.
 
@@ -42,41 +44,30 @@ Server runs at **http://localhost:3001**
 
 ## 2. Configure the website
 
-In `js/config.js`:
+Production URLs are set in `js/config.js`:
 
-```javascript
-apiUrl: "http://localhost:3001/api",           // production: https://your-api-url.com/api
-adminUrl: "http://localhost:3001/admin/",
-```
+- **rhsvegas.com** → API at `https://api.rhsvegas.com`
+- **Render preview URL** → fallback Render API hostname
+- **localhost** → `http://localhost:3001`
 
-For production, set `apiUrl` to your deployed server URL.
-
----
-
-## 3. Deploy the API server (production)
-
-Recommended hosts: [Railway](https://railway.app), [Render](https://render.com), or [Fly.io](https://fly.io).
-
-1. Push this repo to GitHub.
-2. Create a new service pointing at the `server/` folder.
-3. Set environment variables from `server/.env.example`.
-4. Add a **persistent disk/volume** for `DATABASE_PATH` (e.g. `/data/rhsvegas.db`) so bookings survive restarts.
-5. Run seed once (Railway/Render shell): `npm run seed`
-6. Add your live site URL to `FRONTEND_ORIGINS` (e.g. `https://rhsvegas.com`).
-
-Update `js/config.js` `apiUrl` to your production API URL.
+No manual changes needed unless your domain or Render service names differ.
 
 ---
 
-## 4. Deploy the website (GitHub Pages)
+## 3. Deploy to production (Render + GoDaddy)
 
-1. Enable GitHub Pages on the repo (branch `main`, root `/`).
-2. Point `rhsvegas.com` DNS to GitHub Pages.
-3. Ensure `js/config.js` uses your **production** `apiUrl`.
+Full step-by-step: **[RENDER-GODADDY.md](RENDER-GODADDY.md)**
+
+Summary:
+
+1. Deploy via `render.yaml` (two services: `rhsvegas-site` + `rhsvegas-api`)
+2. Set API env vars and run `npm run seed`
+3. Add custom domains in Render (`rhsvegas.com`, `www`, `api.rhsvegas.com`)
+4. Point GoDaddy DNS to Render
 
 ---
 
-## 5. Email notifications (optional)
+## 4. Email notifications (optional)
 
 Set SMTP variables in server `.env`:
 
@@ -123,7 +114,7 @@ On checkout, the server emails you and the customer. Bookings still save if SMTP
 | `/checkout/` | `checkout/index.html` |
 | `/confirmation/` | `confirmation/index.html` |
 
-Staff portal is served from the API server at `/admin/`, not GitHub Pages.
+Staff portal is served from the API at `https://api.rhsvegas.com/admin/` in production.
 
 ---
 
