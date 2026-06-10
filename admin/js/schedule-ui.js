@@ -16,9 +16,49 @@
   var dateStatus = document.getElementById("date-status");
   var overrideDateInput = document.getElementById("override-date");
   var dateOverrideTimes = document.getElementById("date-override-times");
+  var dateSelectedLabel = document.getElementById("date-selected-label");
 
   var weeklyDraft = {};
   var dateDraft = [];
+
+  function hourLabel(hour) {
+    if (hour === 12) return "12pm";
+    if (hour < 12) return hour + "am";
+    return hour - 12 + "pm";
+  }
+
+  function formatDisplayDate(dateStr) {
+    var parts = dateStr.split("-").map(Number);
+    var date = new Date(parts[0], parts[1] - 1, parts[2]);
+    return date.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric"
+    });
+  }
+
+  function dayOfWeekForDate(dateStr) {
+    var parts = dateStr.split("-").map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]).getDay();
+  }
+
+  function weeklyDefaultForDate(dateStr) {
+    return weeklyDraft[dayOfWeekForDate(dateStr)] || [];
+  }
+
+  function buildDateDraftFromWeekly(dateStr) {
+    var weeklyHours = weeklyDefaultForDate(dateStr);
+    return START_HOURS.map(function (startHour) {
+      return {
+        startHour: startHour,
+        label: hourLabel(startHour),
+        enabled: weeklyHours.indexOf(startHour) !== -1,
+        weeklyDefault: weeklyHours.indexOf(startHour) !== -1,
+        hasOverride: false
+      };
+    });
+  }
 
   function formatDateInput(date) {
     var y = date.getFullYear();
@@ -66,10 +106,6 @@
     return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  function weeklyKey(day, hour) {
-    return day + ":" + hour;
-  }
-
   function isWeeklyChecked(day, hour) {
     var list = weeklyDraft[day] || [];
     return list.indexOf(hour) !== -1;
@@ -109,6 +145,7 @@
         weeklyDraft = res.schedule.grid || {};
         renderWeeklyGrid();
         weeklyStatus.textContent = "";
+        loadDateSchedule();
       })
       .catch(function (err) {
         weeklyStatus.textContent = err.message;
@@ -120,33 +157,60 @@
     dateDraft = hours.map(function (entry) {
       return {
         startHour: entry.startHour,
+        label: entry.label || hourLabel(entry.startHour),
         enabled: entry.enabled,
         weeklyDefault: entry.weeklyDefault,
         hasOverride: entry.hasOverride
       };
     });
+    paintDateTimePicker();
+  }
+
+  function paintDateTimePicker() {
+    if (!overrideDateInput.value) {
+      dateSelectedLabel.textContent = "";
+      dateOverrideTimes.innerHTML = "";
+      return;
+    }
+
+    dateSelectedLabel.textContent = formatDisplayDate(overrideDateInput.value);
 
     dateOverrideTimes.innerHTML = dateDraft
       .map(function (entry) {
-        var checked = entry.enabled ? " checked" : "";
-        var note = entry.hasOverride ? ' <span class="override-badge">custom</span>' : "";
+        var selectedClass = entry.enabled ? " selected" : "";
+        var overrideClass = entry.hasOverride ? " custom" : "";
+        var weeklyHint = entry.weeklyDefault ? "Usually on" : "Usually off";
         return (
-          '<label class="date-hour-toggle">' +
-          '<input type="checkbox" data-date-hour="' + entry.startHour + '"' + checked + ">" +
-          "<span>" + escapeHtml(entry.label) + note + "</span></label>"
+          '<button type="button" class="date-time-btn' + selectedClass + overrideClass + '" data-date-hour="' + entry.startHour + '" aria-pressed="' + entry.enabled + '">' +
+          "<strong>" + escapeHtml(entry.label) + "</strong>" +
+          '<span class="date-time-meta">' + escapeHtml(weeklyHint) + (entry.hasOverride ? " · custom" : "") + "</span>" +
+          "</button>"
         );
       })
       .join("");
   }
 
-  function loadDateSchedule() {
+  function showDateTimesFromWeeklyDraft() {
     if (!overrideDateInput.value) return;
-    dateStatus.textContent = "Loading…";
+    renderDateOverrides(buildDateDraftFromWeekly(overrideDateInput.value));
+    dateStatus.textContent = "Choose which start times are available on this date.";
     dateStatus.className = "status";
+  }
+
+  function loadDateSchedule() {
+    if (!overrideDateInput.value) {
+      showDateTimesFromWeeklyDraft();
+      return;
+    }
+
+    showDateTimesFromWeeklyDraft();
+    dateStatus.textContent = "Loading times for " + formatDisplayDate(overrideDateInput.value) + "…";
+    dateStatus.className = "status";
+
     RHSAdmin.fetchDateSchedule(overrideDateInput.value, selectedUserId())
       .then(function (res) {
         renderDateOverrides(res.day.hours);
-        dateStatus.textContent = res.day.dayLabel + " — toggle times for " + res.day.date + ".";
+        dateStatus.textContent = "Tap a time to turn it on or off, then save.";
         dateStatus.className = "status";
       })
       .catch(function (err) {
@@ -224,6 +288,7 @@
     userLabel.textContent = user.name + " (" + user.role + ")";
 
     setHorizonOnDateInput(overrideDateInput);
+    showDateTimesFromWeeklyDraft();
 
     if (user.role === "admin") {
       employeeWrap.classList.remove("hidden");
@@ -287,16 +352,18 @@
 
   overrideDateInput.addEventListener("change", loadDateSchedule);
 
-  dateOverrideTimes.addEventListener("change", function (e) {
-    var input = e.target.closest("[data-date-hour]");
-    if (!input) return;
-    var hour = Number(input.getAttribute("data-date-hour"));
+  dateOverrideTimes.addEventListener("click", function (e) {
+    var button = e.target.closest("[data-date-hour]");
+    if (!button) return;
+    var hour = Number(button.getAttribute("data-date-hour"));
     dateDraft = dateDraft.map(function (entry) {
       if (entry.startHour === hour) {
-        entry.enabled = input.checked;
+        entry.enabled = !entry.enabled;
+        entry.hasOverride = entry.enabled !== entry.weeklyDefault;
       }
       return entry;
     });
+    paintDateTimePicker();
   });
 
   document.getElementById("save-date-btn").addEventListener("click", function () {
