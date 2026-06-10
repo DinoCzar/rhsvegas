@@ -7,7 +7,6 @@ const config = require("./config");
 const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
-const { mountStaticSite, siteAvailable } = require("./static-site");
 
 const app = express();
 
@@ -35,7 +34,7 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true, service: "rhsvegas-api", servesSite: siteAvailable() });
+  res.json({ ok: true, service: "rhsvegas-api" });
 });
 
 app.use("/api/auth", authRoutes);
@@ -56,8 +55,6 @@ if (adminPath) {
   console.warn("Admin portal files not found — /admin/ will not be available.");
 }
 
-const servingSite = mountStaticSite(app);
-
 app.use((err, req, res, next) => {
   if (err.message === "Not allowed by CORS") {
     return res.status(403).json({ ok: false, error: "Origin not allowed." });
@@ -67,11 +64,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, "0.0.0.0", () => {
-  console.log(`RHS Vegas listening on port ${config.port}`);
-  console.log(`Employee portal: /admin/`);
-  if (servingSite) {
-    console.log("Serving website + API from this process");
-  } else {
-    console.log("API only (upload full repo to serve the website from here too)");
-  }
+  console.log("RHS Vegas API listening on port " + config.port);
+  console.log("Employee portal: /admin/");
 });
