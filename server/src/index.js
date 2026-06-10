@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const fs = require("fs");
 const path = require("path");
 const config = require("./config");
+const { ensureAdminUser } = require("./bootstrap-admin");
 const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
@@ -64,6 +65,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, "0.0.0.0", () => {
+  ensureAdminUser();
   console.log("RHS Vegas API listening on port " + config.port);
   console.log("Employee portal: /admin/");
 });
