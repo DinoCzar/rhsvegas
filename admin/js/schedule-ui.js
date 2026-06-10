@@ -22,9 +22,56 @@
   var dateDraft = [];
 
   function hourLabel(hour) {
-    if (hour === 12) return "12pm";
-    if (hour < 12) return hour + "am";
-    return hour - 12 + "pm";
+    var h = Number(hour);
+    if (h === 12) return "12pm";
+    if (h < 12) return h + "am";
+    return h - 12 + "pm";
+  }
+
+  function normalizeHourEntry(entry, fallback) {
+    if (!entry) {
+      return fallback;
+    }
+    var startHour = Number(entry.startHour != null ? entry.startHour : entry.start_hour);
+    if (!startHour || START_HOURS.indexOf(startHour) === -1) {
+      return fallback;
+    }
+    return {
+      startHour: startHour,
+      label: (entry && entry.label) || hourLabel(startHour),
+      enabled: entry && entry.enabled != null ? Boolean(entry.enabled) : fallback.enabled,
+      weeklyDefault:
+        entry && entry.weeklyDefault != null
+          ? Boolean(entry.weeklyDefault)
+          : entry && entry.weekly_default != null
+            ? Boolean(entry.weekly_default)
+            : fallback.weeklyDefault,
+      hasOverride:
+        entry && entry.hasOverride != null
+          ? Boolean(entry.hasOverride)
+          : entry && entry.has_override != null
+            ? Boolean(entry.has_override)
+            : fallback.hasOverride
+    };
+  }
+
+  function buildDateDraft(hours, dateStr) {
+    var weeklyFallback = buildDateDraftFromWeekly(dateStr);
+    var byHour = {};
+
+    (hours || []).forEach(function (entry) {
+      var startHour = Number(entry.startHour != null ? entry.startHour : entry.start_hour);
+      if (START_HOURS.indexOf(startHour) !== -1) {
+        byHour[startHour] = entry;
+      }
+    });
+
+    return START_HOURS.map(function (startHour) {
+      var fallback = weeklyFallback.find(function (item) {
+        return item.startHour === startHour;
+      });
+      return normalizeHourEntry(byHour[startHour], fallback);
+    });
   }
 
   function formatDisplayDate(dateStr) {
@@ -154,15 +201,8 @@
   }
 
   function renderDateOverrides(hours) {
-    dateDraft = hours.map(function (entry) {
-      return {
-        startHour: entry.startHour,
-        label: entry.label || hourLabel(entry.startHour),
-        enabled: entry.enabled,
-        weeklyDefault: entry.weeklyDefault,
-        hasOverride: entry.hasOverride
-      };
-    });
+    if (!overrideDateInput.value) return;
+    dateDraft = buildDateDraft(hours, overrideDateInput.value);
     paintDateTimePicker();
   }
 
@@ -192,7 +232,8 @@
 
   function showDateTimesFromWeeklyDraft() {
     if (!overrideDateInput.value) return;
-    renderDateOverrides(buildDateDraftFromWeekly(overrideDateInput.value));
+    dateDraft = buildDateDraftFromWeekly(overrideDateInput.value);
+    paintDateTimePicker();
     dateStatus.textContent = "Choose which start times are available on this date.";
     dateStatus.className = "status";
   }
