@@ -1,7 +1,7 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
 #
-# After deploy, set env vars on the API service (see server/.env.example).
-# Update js/config.js with your live Render URLs if they differ from the defaults.
+# Hosting: Render (site + API) with GoDaddy domain (rhsvegas.com).
+# See RENDER-GODADDY.md for DNS and custom domain setup.
 
 services:
   - type: web
@@ -19,6 +19,8 @@ services:
         value: production
       - key: JWT_SECRET
         generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: "24h"
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
@@ -26,7 +28,7 @@ services:
       - key: OWNER_EMAIL
         sync: false
       - key: FRONTEND_ORIGINS
-        sync: false
+        value: https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site.onrender.com,https://rhsvegas-site-c5y0.onrender.com
       - key: DATABASE_PATH
         value: ./data/rhsvegas.db
 
