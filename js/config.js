@@ -1,8 +1,8 @@
 (function () {
   /** GoDaddy domain → Render. Update if your Render service names differ. */
   var PRODUCTION_SITE_HOSTS = ["rhsvegas.com", "www.rhsvegas.com"];
-  var PRODUCTION_API_ORIGIN = "https://api.rhsvegas.com";
   var RENDER_API_ORIGIN = "https://rhsvegas-api-c5y0.onrender.com";
+  var PRODUCTION_API_ORIGIN = "https://api.rhsvegas.com";
 
   function apiOrigin() {
     var host = window.location.hostname;
