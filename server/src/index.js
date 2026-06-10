@@ -24,9 +24,22 @@ app.use(
     origin(origin, callback) {
       if (!origin || config.frontendOrigins.includes(origin)) {
         callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return;
       }
+
+      // Staff portal is served from this API host; allow same-origin requests.
+      try {
+        var originHost = new URL(origin).hostname;
+        var allowedHosts = config.apiHosts;
+        if (allowedHosts.indexOf(originHost) !== -1) {
+          callback(null, true);
+          return;
+        }
+      } catch (err) {
+        // fall through
+      }
+
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true
   })
