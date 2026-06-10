@@ -123,7 +123,8 @@ https://api.rhsvegas.com/admin/
 |---------|-----|
 | Domain shows GoDaddy parking page | DNS not updated or still propagating |
 | Checkout fails on rhsvegas.com | Check `FRONTEND_ORIGINS` includes `https://rhsvegas.com` |
-| API deploy fails | Ensure Node 20; check **Logs** on rhsvegas-api |
+| API deploy fails on startup | Logs say `JWT_SECRET` — add a 32+ character random string in Environment and Save |
+| API deploy fails on build | Set **Root Directory** to `.`, **Build** `cd server && npm install`, **Start** `cd server && npm start` |
 | Admin login fails | Run `npm run seed` in API shell; check `ADMIN_EMAIL` / `ADMIN_PASSWORD` |
 | Bookings disappear after redeploy | Add persistent disk on Render for `DATABASE_PATH` (paid plan) or back up `data/rhsvegas.db` |
 

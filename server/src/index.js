@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const fs = require("fs");
 const path = require("path");
 const config = require("./config");
 const authRoutes = require("./routes/auth");
@@ -9,6 +10,8 @@ const checkoutRoutes = require("./routes/checkout");
 const { mountStaticSite, siteAvailable } = require("./static-site");
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 app.use(
   helmet({
@@ -39,8 +42,19 @@ app.use("/api/auth", authRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/checkout", checkoutRoutes);
 
-const adminPath = path.join(__dirname, "../../admin");
-app.use("/admin", express.static(adminPath));
+var adminCandidates = [
+  path.join(__dirname, "../../admin"),
+  path.join(__dirname, "../admin")
+];
+var adminPath = adminCandidates.find(function (p) {
+  return fs.existsSync(p);
+});
+
+if (adminPath) {
+  app.use("/admin", express.static(adminPath));
+} else {
+  console.warn("Admin portal files not found — /admin/ will not be available.");
+}
 
 const servingSite = mountStaticSite(app);
 

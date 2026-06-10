@@ -7,9 +7,9 @@ services:
   - type: web
     name: rhsvegas-api
     runtime: node
-    rootDir: server
-    buildCommand: npm install
-    startCommand: npm start
+    rootDir: .
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
     plan: free
     healthCheckPath: /api/health
     envVars:

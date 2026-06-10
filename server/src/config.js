@@ -1,11 +1,23 @@
 require("dotenv").config();
 
 var isProduction = process.env.NODE_ENV === "production";
-var jwtSecret = process.env.JWT_SECRET || "dev-only-change-in-production";
+var jwtSecret = (process.env.JWT_SECRET || "").trim();
+
+if (!jwtSecret) {
+  jwtSecret = "dev-only-change-in-production";
+}
 
 if (isProduction) {
   if (!process.env.JWT_SECRET || jwtSecret.length < 32) {
-    console.error("FATAL: Set JWT_SECRET to a random string of at least 32 characters in production.");
+    console.error("");
+    console.error("=== RHS Vegas API — startup failed ===");
+    console.error("JWT_SECRET is missing or too short (need 32+ characters).");
+    console.error("");
+    console.error("Fix in Render dashboard → rhsvegas-api → Environment:");
+    console.error("  1. Add or edit JWT_SECRET");
+    console.error("  2. Use a long random string (run: openssl rand -base64 32)");
+    console.error("  3. Save — Render will redeploy automatically");
+    console.error("");
     process.exit(1);
   }
 }
