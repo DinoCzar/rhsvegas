@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("../db");
-const { makeOrderId, isValidEmail } = require("../utils");
+const { makeOrderId, isValidEmail, isWallClockPast } = require("../utils");
 const { sendBookingEmails } = require("../services/email");
 const { validateOrderItems } = require("../services/pricing");
 const { checkoutLimiter } = require("../middleware/rate-limit");
@@ -70,7 +70,7 @@ router.post("/", checkoutLimiter, async (req, res) => {
       throw new Error("SLOT_TAKEN");
     }
 
-    if (new Date(slot.start_at) <= new Date()) {
+    if (isWallClockPast(slot.start_at)) {
       throw new Error("SLOT_PAST");
     }
 

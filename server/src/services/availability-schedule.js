@@ -1,16 +1,12 @@
 const db = require("../db");
 const config = require("../config");
-const { parseLocalDateTime, toIsoLocal } = require("../utils");
+const { wallClockIso, businessNowIso, addMinutesToWallClock } = require("../utils");
 
 const SCHEDULE_WEEKS = 12;
 const SCHEDULE_START_HOURS = [9, 10, 11, 12];
 const SCHEDULE_SLOT_MINUTES = 60;
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function padHour(hour) {
-  return String(hour).padStart(2, "0") + ":00";
-}
 
 function formatHourLabel(hour) {
   if (hour === 12) return "12pm";
@@ -177,13 +173,13 @@ function clearDateOverrides(userId, dateStr) {
 }
 
 function slotTimesForHour(dateStr, startHour) {
-  const start = parseLocalDateTime(dateStr, padHour(startHour));
-  const end = new Date(start.getTime() + SCHEDULE_SLOT_MINUTES * 60 * 1000);
-  return { startAt: toIsoLocal(start), endAt: toIsoLocal(end) };
+  const startAt = wallClockIso(dateStr, startHour, 0);
+  const endAt = addMinutesToWallClock(startAt, SCHEDULE_SLOT_MINUTES);
+  return { startAt: startAt, endAt: endAt };
 }
 
 function syncGeneratedSlotsForDate(userId, dateStr) {
-  const nowIso = toIsoLocal(new Date());
+  const nowIso = businessNowIso();
 
   SCHEDULE_START_HOURS.forEach(function (startHour) {
     const { startAt, endAt } = slotTimesForHour(dateStr, startHour);
@@ -325,7 +321,7 @@ function getAvailableDates(from, to) {
   const horizon = scheduleHorizon();
   const rangeFrom = from && from >= horizon.from ? from : horizon.from;
   const rangeTo = to && to <= horizon.to ? to : horizon.to;
-  const nowIso = toIsoLocal(new Date());
+  const nowIso = businessNowIso();
   const dates = [];
   const cursor = parseDateOnly(rangeFrom);
   const end = parseDateOnly(rangeTo);
@@ -355,7 +351,7 @@ function getPublicSlotsForDate(dateStr) {
 
   const dayStart = dateStr + "T00:00:00";
   const dayEnd = dateStr + "T23:59:59";
-  const nowIso = toIsoLocal(new Date());
+  const nowIso = businessNowIso();
 
   return db
     .prepare(
