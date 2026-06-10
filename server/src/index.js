@@ -1,14 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const fs = require("fs");
 const path = require("path");
 const config = require("./config");
 const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
-const { mountStaticSite, siteAvailable } = require("./static-site");
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 app.use(
   helmet({
@@ -32,17 +34,26 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true, service: "rhsvegas-api", servesSite: siteAvailable() });
+  res.json({ ok: true, service: "rhsvegas-api" });
 });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/checkout", checkoutRoutes);
 
-const adminPath = path.join(__dirname, "../../admin");
-app.use("/admin", express.static(adminPath));
+var adminCandidates = [
+  path.join(__dirname, "../../admin"),
+  path.join(__dirname, "../admin")
+];
+var adminPath = adminCandidates.find(function (p) {
+  return fs.existsSync(p);
+});
 
-const servingSite = mountStaticSite(app);
+if (adminPath) {
+  app.use("/admin", express.static(adminPath));
+} else {
+  console.warn("Admin portal files not found — /admin/ will not be available.");
+}
 
 app.use((err, req, res, next) => {
   if (err.message === "Not allowed by CORS") {
@@ -53,11 +64,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, "0.0.0.0", () => {
-  console.log(`RHS Vegas listening on port ${config.port}`);
-  console.log(`Employee portal: /admin/`);
-  if (servingSite) {
-    console.log("Serving website + API from this process");
-  } else {
-    console.log("API only (upload full repo to serve the website from here too)");
-  }
+  console.log("RHS Vegas API listening on port " + config.port);
+  console.log("Employee portal: /admin/");
 });
