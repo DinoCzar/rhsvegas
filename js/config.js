@@ -1,19 +1,22 @@
 window.RHS_CONFIG = {
-  // Booking API — localhost for dev; set production URL after Render deploy
   apiUrl: (function () {
     var host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://localhost:3001/api";
     }
-    // Update if your Render API service has a different name
+    if (host === "rhsvegas.com" || host === "www.rhsvegas.com") {
+      return "https://api.rhsvegas.com/api";
+    }
     return "https://rhsvegas-api-c5y0.onrender.com/api";
   })(),
 
-  // Staff portal to manage availability
   adminUrl: (function () {
     var host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://localhost:3001/admin/";
+    }
+    if (host === "rhsvegas.com" || host === "www.rhsvegas.com") {
+      return "https://api.rhsvegas.com/admin/";
     }
     return "https://rhsvegas-api-c5y0.onrender.com/admin/";
   })(),
