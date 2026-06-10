@@ -2,10 +2,14 @@ const express = require("express");
 const db = require("../db");
 const { makeOrderId, isValidEmail } = require("../utils");
 const { sendBookingEmails } = require("../services/email");
+const { validateOrderItems } = require("../services/pricing");
+const { checkoutLimiter } = require("../middleware/rate-limit");
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+const MAX_FIELD_LENGTH = 500;
+
+router.post("/", checkoutLimiter, async (req, res) => {
   const order = req.body?.order || req.body;
   if (!order) {
     return res.status(400).json({ ok: false, error: "Missing order payload." });
@@ -22,8 +26,23 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ ok: false, error: "Invalid email address." });
   }
 
-  if (!order.items || !order.items.length) {
-    return res.status(400).json({ ok: false, error: "Cart is empty." });
+  for (const field of ["name", "address", "phone"]) {
+    if (String(order[field]).trim().length > MAX_FIELD_LENGTH) {
+      return res.status(400).json({ ok: false, error: `Field too long: ${field}` });
+    }
+  }
+
+  let validatedItems;
+  try {
+    validatedItems = validateOrderItems(order.items);
+  } catch (err) {
+    if (err.message === "UNKNOWN_ITEM") {
+      return res.status(400).json({ ok: false, error: "One or more cart items are not valid services." });
+    }
+    if (err.message === "INVALID_PRICE") {
+      return res.status(400).json({ ok: false, error: "Cart prices do not match our service list. Please refresh and try again." });
+    }
+    return res.status(400).json({ ok: false, error: "Invalid cart items." });
   }
 
   const slotId = Number(order.slotId);
@@ -71,8 +90,8 @@ router.post("/", async (req, res) => {
       order.email.trim().toLowerCase(),
       order.phone.trim(),
       order.address.trim(),
-      JSON.stringify(order.items),
-      Number(order.estimatedTotal) || 0
+      JSON.stringify(validatedItems.items),
+      validatedItems.estimatedTotal
     );
 
     return { slot, orderId };
@@ -87,13 +106,13 @@ router.post("/", async (req, res) => {
       customer_email: order.email.trim(),
       customer_phone: order.phone.trim(),
       customer_address: order.address.trim(),
-      estimated_total: Number(order.estimatedTotal) || 0,
+      estimated_total: validatedItems.estimatedTotal,
       start_at: slot.start_at,
       end_at: slot.end_at
     };
 
     try {
-      await sendBookingEmails(booking, order.items, slot.employee_name);
+      await sendBookingEmails(booking, validatedItems.items, slot.employee_name);
     } catch (emailErr) {
       console.error("[email] Failed to send:", emailErr.message);
     }
