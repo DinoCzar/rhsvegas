@@ -78,10 +78,13 @@
 
     <div class="card card-padded">
       <h2>Select Appointment</h2>
-      <p class="help-text">Choose from available appointment times (<span id="timezone-label">Pacific Time</span>).</p>
+      <p class="help-text">Choose from dates and times your team has marked available (<span id="timezone-label">Pacific Time</span>).</p>
       <div>
         <label for="appointment-date">Preferred Date *</label>
-        <input id="appointment-date" name="appointmentDate" type="date" required>
+        <select id="appointment-date" name="appointmentDate" required>
+          <option value="">Loading available dates…</option>
+        </select>
+        <p class="help-text" id="date-help"></p>
       </div>
       <div id="slot-section" hidden>
         <label>Available Times *</label>
@@ -129,22 +132,6 @@
     }).join("") + '<div class="order-line"><strong>Estimated total</strong><strong>' +
       escapeHtml(RHSCart.formatPrice(RHSCart.getTotal())) + "</strong></div>";
 
-    var today = new Date();
-    today.setDate(today.getDate() + 1);
-    dateInput.min = formatDateInput(today);
-    var maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 12 * 7);
-    dateInput.max = formatDateInput(maxDate);
-
-    dateInput.addEventListener("change", loadSlots);
-
-    function formatDateInput(date) {
-      var y = date.getFullYear();
-      var m = String(date.getMonth() + 1).padStart(2, "0");
-      var d = String(date.getDate()).padStart(2, "0");
-      return y + "-" + m + "-" + d;
-    }
-
     function escapeHtml(value) {
       return String(value)
         .replace(/&/g, "&amp;")
@@ -153,9 +140,65 @@
         .replace(/"/g, "&quot;");
     }
 
+    function formatDisplayDate(dateStr) {
+      var parts = dateStr.split("-").map(Number);
+      var date = new Date(parts[0], parts[1] - 1, parts[2]);
+      return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+    }
+
+    function loadAvailableDates() {
+      var dateHelp = document.getElementById("date-help");
+      dateInput.disabled = true;
+      dateInput.innerHTML = '<option value="">Loading available dates…</option>';
+
+      RHSCheckout.getAvailableDates()
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error(response.error || "Could not load available dates.");
+          }
+
+          if (!response.dates || !response.dates.length) {
+            dateInput.innerHTML = '<option value="">No appointments available right now</option>';
+            dateHelp.textContent = "Please check back later or contact us to schedule.";
+            submitBtn.disabled = true;
+            slotSection.hidden = true;
+            return;
+          }
+
+          dateInput.innerHTML = response.dates.map(function (dateStr) {
+            return '<option value="' + escapeHtml(dateStr) + '">' + escapeHtml(formatDisplayDate(dateStr)) + "</option>";
+          }).join("");
+
+          dateInput.disabled = false;
+          submitBtn.disabled = false;
+          dateHelp.textContent = response.dates.length + " date(s) available based on staff schedules.";
+          loadSlots();
+        })
+        .catch(function (error) {
+          dateInput.innerHTML = '<option value="">Could not load dates</option>';
+          dateHelp.textContent = error.message;
+          dateHelp.className = "status error";
+          submitBtn.disabled = true;
+        });
+    }
+
+    dateInput.addEventListener("change", loadSlots);
+    loadAvailableDates();
+
     function loadSlots() {
       selectedSlot = null;
       slotGrid.innerHTML = "";
+
+      if (!dateInput.value) {
+        slotSection.hidden = true;
+        return;
+      }
+
       slotStatus.textContent = "Loading available times...";
       slotStatus.className = "status";
       slotSection.hidden = false;

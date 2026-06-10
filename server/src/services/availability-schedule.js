@@ -273,6 +273,108 @@ function normalizeHourStates(body) {
     });
 }
 
+function syncActiveUsersForDate(dateStr) {
+  const users = db.prepare("SELECT id FROM users WHERE active = 1").all();
+  users.forEach(function (user) {
+    syncGeneratedSlotsForDate(user.id, dateStr);
+  });
+}
+
+function isBookableSlot(userId, dateStr, startHour, nowIso) {
+  if (!isEffectivelyEnabled(userId, dateStr, startHour)) {
+    return false;
+  }
+
+  const { startAt, endAt } = slotTimesForHour(dateStr, startHour);
+  if (startAt <= nowIso) {
+    return false;
+  }
+
+  const row = db
+    .prepare(
+      `
+      SELECT b.id AS booking_id
+      FROM availability_slots s
+      LEFT JOIN bookings b ON b.slot_id = s.id
+      WHERE s.user_id = ? AND s.start_at = ? AND s.end_at = ?
+    `
+    )
+    .get(userId, startAt, endAt);
+
+  if (!row) {
+    return true;
+  }
+
+  return !row.booking_id;
+}
+
+function dateHasAvailableSlots(dateStr, nowIso) {
+  const users = db.prepare("SELECT id FROM users WHERE active = 1").all();
+  if (!users.length) {
+    return false;
+  }
+
+  return users.some(function (user) {
+    return SCHEDULE_START_HOURS.some(function (startHour) {
+      return isBookableSlot(user.id, dateStr, startHour, nowIso);
+    });
+  });
+}
+
+function getAvailableDates(from, to) {
+  const horizon = scheduleHorizon();
+  const rangeFrom = from && from >= horizon.from ? from : horizon.from;
+  const rangeTo = to && to <= horizon.to ? to : horizon.to;
+  const nowIso = toIsoLocal(new Date());
+  const dates = [];
+  const cursor = parseDateOnly(rangeFrom);
+  const end = parseDateOnly(rangeTo);
+
+  while (cursor <= end) {
+    const dateStr = formatDateOnly(cursor);
+    if (dateHasAvailableSlots(dateStr, nowIso)) {
+      dates.push(dateStr);
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
+}
+
+function getPublicSlotsForDate(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    throw new Error("INVALID_DATE");
+  }
+
+  const horizon = scheduleHorizon();
+  if (dateStr < horizon.from || dateStr > horizon.to) {
+    throw new Error("DATE_OUT_OF_RANGE");
+  }
+
+  syncActiveUsersForDate(dateStr);
+
+  const dayStart = dateStr + "T00:00:00";
+  const dayEnd = dateStr + "T23:59:59";
+  const nowIso = toIsoLocal(new Date());
+
+  return db
+    .prepare(
+      `
+      SELECT s.id, s.start_at, s.end_at, u.name AS employee_name
+      FROM availability_slots s
+      JOIN users u ON u.id = s.user_id AND u.active = 1
+      LEFT JOIN bookings b ON b.slot_id = s.id
+      WHERE b.id IS NULL
+        AND s.generated = 1
+        AND s.start_at >= ?
+        AND s.start_at <= ?
+        AND s.start_at > ?
+      ORDER BY s.start_at
+    `
+    )
+    .all(dayStart, dayEnd, nowIso);
+}
+
 function resolveTargetUserId(req, bodyUserId) {
   if (req.user.role === "admin" && bodyUserId) {
     const targetUserId = Number(bodyUserId);
@@ -296,6 +398,9 @@ module.exports = {
   saveDateOverrides,
   clearDateOverrides,
   syncGeneratedSlots,
+  syncActiveUsersForDate,
+  getAvailableDates,
+  getPublicSlotsForDate,
   normalizeEnabledSlots,
   normalizeHourStates,
   resolveTargetUserId

@@ -139,7 +139,8 @@
 }
 
 .form-grid input,
-.form-grid textarea {
+.form-grid textarea,
+.card-padded select {
   width: 100%;
   box-sizing: border-box;
   padding: 12px 14px;
@@ -151,7 +152,8 @@
 }
 
 .form-grid input:focus,
-.form-grid textarea:focus {
+.form-grid textarea:focus,
+.card-padded select:focus {
   outline: none;
   border-color: var(--color-primary);
 }
