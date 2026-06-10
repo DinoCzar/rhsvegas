@@ -21,6 +21,33 @@ function slotToResponse(row) {
   };
 }
 
+/** Public: dates within range that have at least one staff-scheduled open slot */
+router.get("/dates", (req, res) => {
+  try {
+    const horizon = schedule.scheduleHorizon();
+    const from = req.query.from;
+    const to = req.query.to;
+
+    if (from && !/^\d{4}-\d{2}-\d{2}$/.test(from)) {
+      return res.status(400).json({ ok: false, error: "Invalid from date (YYYY-MM-DD)." });
+    }
+    if (to && !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      return res.status(400).json({ ok: false, error: "Invalid to date (YYYY-MM-DD)." });
+    }
+
+    const dates = schedule.getAvailableDates(from, to);
+    res.json({
+      ok: true,
+      from: from || horizon.from,
+      to: to || horizon.to,
+      dates: dates
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: "Could not load available dates." });
+  }
+});
+
 /** Public: available slots for a date (not yet booked) */
 router.get("/", (req, res) => {
   const date = req.query.date;
@@ -28,31 +55,23 @@ router.get("/", (req, res) => {
     return res.status(400).json({ ok: false, error: "Valid date query required (YYYY-MM-DD)." });
   }
 
-  const dayStart = `${date}T00:00:00`;
-  const dayEnd = `${date}T23:59:59`;
-  const nowIso = toIsoLocal(new Date());
-
-  const rows = db
-    .prepare(
-      `
-      SELECT s.id, s.start_at, s.end_at, u.name AS employee_name
-      FROM availability_slots s
-      JOIN users u ON u.id = s.user_id AND u.active = 1
-      LEFT JOIN bookings b ON b.slot_id = s.id
-      WHERE b.id IS NULL
-        AND s.start_at >= ?
-        AND s.start_at <= ?
-        AND s.start_at > ?
-      ORDER BY s.start_at
-    `
-    )
-    .all(dayStart, dayEnd, nowIso);
-
-  res.json({
-    ok: true,
-    date,
-    slots: rows.map(slotToResponse)
-  });
+  try {
+    const rows = schedule.getPublicSlotsForDate(date);
+    res.json({
+      ok: true,
+      date,
+      slots: rows.map(slotToResponse)
+    });
+  } catch (err) {
+    if (err.message === "DATE_OUT_OF_RANGE") {
+      return res.status(400).json({
+        ok: false,
+        error: "Date must be within the next " + schedule.SCHEDULE_WEEKS + " weeks."
+      });
+    }
+    console.error(err);
+    res.status(500).json({ ok: false, error: "Could not load availability." });
+  }
 });
 
 /** Employee/admin: list slots (own or all for admin) */

@@ -33,6 +33,10 @@
   }
 
   window.RHSCheckout = {
+    getAvailableDates: function () {
+      return apiGet("/availability/dates");
+    },
+
     getAvailability: function (date) {
       return apiGet("/availability?date=" + encodeURIComponent(date));
     },
