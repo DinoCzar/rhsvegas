@@ -5,7 +5,7 @@ const { authRequired, adminRequired } = require("../middleware/auth");
 const {
   formatSlotLabel,
   parseLocalDateTime,
-  toIsoLocal
+  isWallClockPast
 } = require("../utils");
 const schedule = require("../services/availability-schedule");
 
@@ -16,7 +16,7 @@ function slotToResponse(row) {
     id: row.id,
     start: row.start_at,
     end: row.end_at,
-    label: formatSlotLabel(row.start_at, row.end_at),
+    label: formatSlotLabel(row.start_at),
     employeeName: row.employee_name || row.name
   };
 }
@@ -234,16 +234,16 @@ router.post("/", authRequired, (req, res) => {
     return res.status(400).json({ ok: false, error: "Invalid date format." });
   }
 
-  const start = parseLocalDateTime(date, startTime);
-  const end = parseLocalDateTime(date, endTime);
+  const startAt = parseLocalDateTime(date, startTime);
+  const endAt = parseLocalDateTime(date, endTime);
 
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+  if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) {
     return res.status(400).json({ ok: false, error: "Invalid start or end time." });
   }
-  if (end <= start) {
+  if (endAt <= startAt) {
     return res.status(400).json({ ok: false, error: "End time must be after start time." });
   }
-  if (start <= new Date()) {
+  if (isWallClockPast(startAt)) {
     return res.status(400).json({ ok: false, error: "Cannot add availability in the past." });
   }
 
@@ -255,9 +255,6 @@ router.post("/", authRequired, (req, res) => {
       return res.status(400).json({ ok: false, error: "Employee not found." });
     }
   }
-
-  const startAt = toIsoLocal(start);
-  const endAt = toIsoLocal(end);
 
   const overlap = db
     .prepare(

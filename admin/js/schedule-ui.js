@@ -142,11 +142,28 @@
     return null;
   }
 
+  function formatAppointmentTimeFromIso(iso) {
+    var match = String(iso).match(/T(\d{2}):(\d{2})/);
+    if (!match) return iso;
+    var hour = Number(match[1]);
+    var minute = Number(match[2]);
+    var h12 = hour % 12 || 12;
+    var ampm = hour < 12 ? "AM" : "PM";
+    return h12 + ":" + String(minute).padStart(2, "0") + " " + ampm;
+  }
+
+  function formatDisplayDateFromIso(iso) {
+    var parts = String(iso).slice(0, 10).split("-").map(Number);
+    var date = new Date(parts[0], parts[1] - 1, parts[2]);
+    return date.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric"
+    });
+  }
+
   function formatRange(start, end) {
-    var s = new Date(start.replace("T", " ") + (start.length === 19 ? "" : ""));
-    var e = new Date(end.replace("T", " ") + (end.length === 19 ? "" : ""));
-    var opts = { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" };
-    return s.toLocaleString(undefined, opts) + " – " + e.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return formatDisplayDateFromIso(start) + " at " + formatAppointmentTimeFromIso(start);
   }
 
   function escapeHtml(v) {
