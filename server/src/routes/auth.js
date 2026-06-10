@@ -4,11 +4,12 @@ const jwt = require("jsonwebtoken");
 const db = require("../db");
 const config = require("../config");
 const { authRequired, adminRequired } = require("../middleware/auth");
+const { loginLimiter } = require("../middleware/rate-limit");
 const { isValidEmail } = require("../utils");
 
 const router = express.Router();
 
-router.post("/login", (req, res) => {
+router.post("/login", loginLimiter, (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ ok: false, error: "Email and password required." });
@@ -23,7 +24,7 @@ router.post("/login", (req, res) => {
   }
 
   const token = jwt.sign({ sub: user.id, role: user.role }, config.jwtSecret, {
-    expiresIn: "7d"
+    expiresIn: config.jwtExpiresIn
   });
 
   res.json({

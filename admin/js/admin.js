@@ -3,10 +3,6 @@
   var USER_KEY = "rhs_staff_user";
 
   function getApiBase() {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get("api")) {
-      return params.get("api").replace(/\/$/, "");
-    }
     if (window.RHS_ADMIN_CONFIG && window.RHS_ADMIN_CONFIG.apiUrl) {
       return window.RHS_ADMIN_CONFIG.apiUrl.replace(/\/$/, "");
     }
