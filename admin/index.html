@@ -62,10 +62,13 @@
 
     <div class="card">
       <h2>Adjust a Specific Date</h2>
-      <p class="card-help">Override your weekly schedule for one day without changing the rest of the week.</p>
+      <p class="card-help">Pick a date, then turn individual start times on or off for that day only.</p>
       <label for="override-date">Date</label>
       <input id="override-date" type="date">
-      <div class="date-override-times" id="date-override-times"></div>
+      <p class="date-selected-label" id="date-selected-label"></p>
+      <label class="date-times-label">Available start times for this date</label>
+      <div class="date-time-grid" id="date-override-times"></div>
+      <p class="date-times-hint">Checked times are open for booking. Uncheck to block a time that your weekly schedule would normally include.</p>
       <div class="btn-row">
         <button class="btn-primary" type="button" id="save-date-btn">Save Date Changes</button>
         <button class="btn-secondary" type="button" id="reset-date-btn">Reset to Weekly Schedule</button>
