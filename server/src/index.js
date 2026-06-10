@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const fs = require("fs");
 const path = require("path");
 const config = require("./config");
+const { ensureAdminUser } = require("./bootstrap-admin");
 const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
@@ -23,9 +24,22 @@ app.use(
     origin(origin, callback) {
       if (!origin || config.frontendOrigins.includes(origin)) {
         callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return;
       }
+
+      // Staff portal is served from this API host; allow same-origin requests.
+      try {
+        var originHost = new URL(origin).hostname;
+        var allowedHosts = config.apiHosts;
+        if (allowedHosts.indexOf(originHost) !== -1) {
+          callback(null, true);
+          return;
+        }
+      } catch (err) {
+        // fall through
+      }
+
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true
   })
@@ -64,6 +78,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(config.port, "0.0.0.0", () => {
+  ensureAdminUser();
   console.log("RHS Vegas API listening on port " + config.port);
   console.log("Employee portal: /admin/");
 });

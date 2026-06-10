@@ -28,7 +28,7 @@ services:
       - key: OWNER_EMAIL
         sync: false
       - key: FRONTEND_ORIGINS
-        value: https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site.onrender.com,https://rhsvegas-site-c5y0.onrender.com
+        value: https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site.onrender.com,https://rhsvegas-site-c5y0.onrender.com,https://rhsvegas-api-c5y0.onrender.com,https://api.rhsvegas.com
       - key: DATABASE_PATH
         value: ./data/rhsvegas.db
 

@@ -33,6 +33,13 @@ module.exports = {
       return s.trim();
     })
     .filter(Boolean),
+  apiHosts: (process.env.API_HOSTS ||
+    "localhost,rhsvegas-api-c5y0.onrender.com,api.rhsvegas.com")
+    .split(",")
+    .map(function (s) {
+      return s.trim();
+    })
+    .filter(Boolean),
   ownerEmail: process.env.OWNER_EMAIL || "",
   businessName: process.env.BUSINESS_NAME || "Ryan's Home Solutions",
   timezone: process.env.TIMEZONE || "America/Los_Angeles",
