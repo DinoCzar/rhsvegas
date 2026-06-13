@@ -10,7 +10,6 @@ services:
     rootDir: .
     buildCommand: cd server && npm install
     startCommand: cd server && npm start
-    plan: free
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
@@ -43,8 +42,10 @@ services:
         sync: false
       - key: FRONTEND_ORIGINS
         value: https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site.onrender.com,https://rhsvegas-site-c5y0.onrender.com,https://rhsvegas-api-c5y0.onrender.com,https://api.rhsvegas.com
-      - key: DATABASE_PATH
-        value: ./data/rhsvegas.db
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
 
   - type: web
     name: rhsvegas-site

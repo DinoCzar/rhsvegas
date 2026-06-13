@@ -1,18 +1,89 @@
 const fs = require("fs");
 const path = require("path");
-const Database = require("better-sqlite3");
+const { createClient } = require("@libsql/client");
 const config = require("./config");
 
-const dir = path.dirname(config.databasePath);
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
+var client = null;
+
+function normalizeValue(value) {
+  if (typeof value === "bigint") {
+    return Number(value);
+  }
+  return value;
 }
 
-const db = new Database(config.databasePath);
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+function normalizeRow(row) {
+  if (!row) {
+    return undefined;
+  }
+  var out = {};
+  Object.keys(row).forEach(function (key) {
+    out[key] = normalizeValue(row[key]);
+  });
+  return out;
+}
 
-db.exec(`
+function normalizeRows(rows) {
+  return (rows || []).map(normalizeRow);
+}
+
+function createExecutor(executor) {
+  return {
+    get: async function (sql, args) {
+      var result = await executor.execute({ sql: sql, args: args || [] });
+      return normalizeRow(result.rows[0]);
+    },
+    all: async function (sql, args) {
+      var result = await executor.execute({ sql: sql, args: args || [] });
+      return normalizeRows(result.rows);
+    },
+    run: async function (sql, args) {
+      var result = await executor.execute({ sql: sql, args: args || [] });
+      return {
+        changes: result.rowsAffected,
+        lastInsertRowid: normalizeValue(result.lastInsertRowid)
+      };
+    }
+  };
+}
+
+function getClient() {
+  if (!client) {
+    throw new Error("Database not initialized. Call initDb() first.");
+  }
+  return client;
+}
+
+async function exec(sql) {
+  await getClient().executeMultiple(sql);
+}
+
+async function get(sql, args) {
+  return createExecutor(getClient()).get(sql, args);
+}
+
+async function all(sql, args) {
+  return createExecutor(getClient()).all(sql, args);
+}
+
+async function run(sql, args) {
+  return createExecutor(getClient()).run(sql, args);
+}
+
+async function transaction(fn) {
+  var txn = await getClient().transaction("write");
+  var tx = createExecutor(txn);
+  try {
+    var result = await fn(tx);
+    await txn.commit();
+    return result;
+  } catch (err) {
+    await txn.rollback();
+    throw err;
+  }
+}
+
+var SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
@@ -72,40 +143,60 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (reviewed_by) REFERENCES users(id)
   );
-`);
+`;
 
-try {
-  db.exec("ALTER TABLE availability_slots ADD COLUMN generated INTEGER NOT NULL DEFAULT 0");
-} catch (err) {
-  // column already exists
+async function runOptionalMigration(sql) {
+  try {
+    await exec(sql);
+  } catch (err) {
+    // column/index already exists on older databases
+  }
 }
 
-try {
-  db.exec("ALTER TABLE bookings ADD COLUMN status TEXT NOT NULL DEFAULT 'approved'");
-} catch (err) {
-  // column already exists
-}
+async function initDb() {
+  if (config.turso.url.startsWith("file:")) {
+    var filePath = config.turso.url.replace(/^file:/, "");
+    var dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  }
 
-try {
-  db.exec("ALTER TABLE bookings ADD COLUMN reviewed_at TEXT");
-} catch (err) {
-  // column already exists
-}
+  client = createClient({
+    url: config.turso.url,
+    authToken: config.turso.authToken || undefined
+  });
 
-try {
-  db.exec("ALTER TABLE bookings ADD COLUMN reviewed_by INTEGER");
-} catch (err) {
-  // column already exists
-}
-
-try {
-  db.exec(`
+  await exec("PRAGMA foreign_keys = ON;");
+  await exec(SCHEMA);
+  await runOptionalMigration(
+    "ALTER TABLE availability_slots ADD COLUMN generated INTEGER NOT NULL DEFAULT 0;"
+  );
+  await runOptionalMigration(
+    "ALTER TABLE bookings ADD COLUMN status TEXT NOT NULL DEFAULT 'approved';"
+  );
+  await runOptionalMigration("ALTER TABLE bookings ADD COLUMN reviewed_at TEXT;");
+  await runOptionalMigration("ALTER TABLE bookings ADD COLUMN reviewed_by INTEGER;");
+  await runOptionalMigration(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_active_slot
       ON bookings(slot_id)
-      WHERE status IN ('pending', 'approved')
+      WHERE status IN ('pending', 'approved');
   `);
-} catch (err) {
-  // index already exists or table needs rebuild on legacy DBs
 }
 
-module.exports = db;
+function getDatabaseLabel() {
+  if (config.turso.url.startsWith("file:")) {
+    return config.turso.url;
+  }
+  return config.turso.url.replace(/\/\/[^@]+@/, "//***@");
+}
+
+module.exports = {
+  initDb,
+  get,
+  all,
+  run,
+  exec,
+  transaction,
+  getDatabaseLabel
+};

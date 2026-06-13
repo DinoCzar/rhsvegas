@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const db = require("../db");
+const { asyncHandler } = require("../async-handler");
 
 const JWT_ALGORITHMS = ["HS256"];
 
-function authRequired(req, res, next) {
+const authRequired = asyncHandler(async function (req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
 
@@ -14,9 +15,9 @@ function authRequired(req, res, next) {
 
   try {
     const payload = jwt.verify(token, config.jwtSecret, { algorithms: JWT_ALGORITHMS });
-    const user = db
-      .prepare("SELECT id, email, name, role, active FROM users WHERE id = ?")
-      .get(payload.sub);
+    const user = await db.get("SELECT id, email, name, role, active FROM users WHERE id = ?", [
+      payload.sub
+    ]);
 
     if (!user || !user.active) {
       return res.status(401).json({ ok: false, error: "Invalid or inactive account." });
@@ -27,7 +28,7 @@ function authRequired(req, res, next) {
   } catch (err) {
     return res.status(401).json({ ok: false, error: "Invalid or expired session." });
   }
-}
+});
 
 function adminRequired(req, res, next) {
   if (req.user.role !== "admin") {

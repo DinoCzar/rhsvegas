@@ -26,10 +26,7 @@ The repo is already configured in `js/config.js` and `render.yaml` for this setu
      https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site-c5y0.onrender.com
      ```
    - `JWT_SECRET` — auto-generated is fine (must be 32+ characters)
-4. **rhsvegas-api** → **Shell** → run once:
-   ```bash
-   npm run seed
-   ```
+4. **rhsvegas-api** uses a **persistent disk** (see Part 5) — admin login is auto-created from `ADMIN_EMAIL` / `ADMIN_PASSWORD` on startup; you do not need to run `npm run seed` on Render.
 5. Confirm both services show **Live** in **Events**.
 
 Test before custom domain:
@@ -92,6 +89,40 @@ Hard refresh Safari after first visit: **Cmd + Shift + R**
 
 ---
 
+## Part 5 — Persist staff availability and bookings
+
+Render’s **free** tier uses an **ephemeral filesystem** — a local SQLite file is wiped whenever the API restarts or spins down after inactivity.
+
+This repo uses **[Turso](https://turso.tech)** (free tier) for cloud SQLite so your **weekly schedule**, **date overrides**, **bookings**, and **staff accounts** survive restarts without paying for Render’s Starter plan or persistent disk.
+
+On each startup the API also **regenerates bookable time slots** from the saved weekly schedule so checkout dates appear immediately.
+
+### One-time Turso setup
+
+1. Sign up at [turso.tech](https://turso.tech) and install the CLI (optional but helpful):
+   ```bash
+   brew install tursodatabase/tap/turso
+   turso auth login
+   ```
+2. Create a database:
+   ```bash
+   turso db create rhsvegas
+   turso db show rhsvegas --url
+   turso db tokens create rhsvegas
+   ```
+3. Render dashboard → **rhsvegas-api** → **Environment** → add:
+   | Variable | Value |
+   |----------|--------|
+   | `TURSO_DATABASE_URL` | `libsql://…` from step 2 |
+   | `TURSO_AUTH_TOKEN` | token from step 2 |
+4. **Manual Deploy** → deploy latest commit.
+
+Local dev still uses a file at `server/data/rhsvegas.db` — no Turso credentials needed unless you want to point at the cloud DB.
+
+After the first deploy, re-save your weekly schedule once in the staff portal if slots were lost before migration.
+
+---
+
 ## How the pieces connect
 
 ```
@@ -125,8 +156,9 @@ https://api.rhsvegas.com/admin/
 | Checkout fails on rhsvegas.com | Check `FRONTEND_ORIGINS` includes `https://rhsvegas.com` |
 | API deploy fails on startup | Logs say `JWT_SECRET` — add a 32+ character random string in Environment and Save |
 | API deploy fails on build | Set **Root Directory** to `.`, **Build** `cd server && npm install`, **Start** `cd server && npm start` |
-| Admin login fails | Run `npm run seed` in API shell; check `ADMIN_EMAIL` / `ADMIN_PASSWORD` |
-| Bookings disappear after redeploy | Add persistent disk on Render for `DATABASE_PATH` (paid plan) or back up `data/rhsvegas.db` |
+| Admin login fails | Check `ADMIN_EMAIL` / `ADMIN_PASSWORD` in Environment; redeploy and try again |
+| Staff availability gone after idle | Upgrade to **Starter** + persistent disk at `/var/data` (see Part 5) |
+| Bookings disappear after redeploy | Same as above — database must live on the persistent disk |
 
 ---
 
