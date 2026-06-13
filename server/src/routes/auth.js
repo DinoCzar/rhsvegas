@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../db");
 const config = require("../config");
-const { authRequired, adminRequired } = require("../middleware/auth");
+const { authRequired, adminRequired, JWT_ALGORITHMS } = require("../middleware/auth");
 const { loginLimiter } = require("../middleware/rate-limit");
 const { isValidEmail } = require("../utils");
 
@@ -24,7 +24,8 @@ router.post("/login", loginLimiter, (req, res) => {
   }
 
   const token = jwt.sign({ sub: user.id, role: user.role }, config.jwtSecret, {
-    expiresIn: config.jwtExpiresIn
+    expiresIn: config.jwtExpiresIn,
+    algorithm: JWT_ALGORITHMS[0]
   });
 
   res.json({

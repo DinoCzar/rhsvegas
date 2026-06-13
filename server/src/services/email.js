@@ -207,14 +207,12 @@ async function sendNewBookingRequestEmail(booking, items, employeeName) {
   ].join("\n");
 
   if (!isEmailConfigured()) {
-    console.warn("[email] Email not configured — owner notification was not sent.");
-    console.log(ownerBody);
+    console.warn("[email] Email not configured — owner notification was not sent for", booking.order_id);
     return { sent: false, reason: "email_not_configured" };
   }
 
   if (!ownerEmail) {
-    console.warn("[email] OWNER_EMAIL is not set — owner notification was not sent.");
-    console.log(ownerBody);
+    console.warn("[email] OWNER_EMAIL is not set — owner notification was not sent for", booking.order_id);
     return { sent: false, reason: "owner_email_missing" };
   }
 
@@ -284,8 +282,7 @@ async function sendBookingConfirmationEmail(booking, items, employeeName) {
   ].join("\n");
 
   if (!isEmailConfigured()) {
-    console.warn("[email] Email not configured — confirmation email was not sent.");
-    console.log(customerBody);
+    console.warn("[email] Email not configured — confirmation email was not sent for", booking.order_id);
     return { sent: false, reason: "email_not_configured" };
   }
 

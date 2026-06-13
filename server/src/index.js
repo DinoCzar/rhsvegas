@@ -50,6 +50,10 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/health", (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.json({ ok: true, service: "rhsvegas-api" });
+  }
+
   var email = getEmailStatus();
   res.json({
     ok: true,
