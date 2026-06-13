@@ -65,6 +65,10 @@ router.post("/", checkoutLimiter, async (req, res) => {
       throw new Error("SLOT_NOT_FOUND");
     }
 
+    if (slot.generated !== 1) {
+      throw new Error("SLOT_NOT_PUBLIC");
+    }
+
     const existing = db
       .prepare(
         "SELECT id FROM bookings WHERE slot_id = ? AND status IN ('pending', 'approved')"
@@ -133,6 +137,9 @@ router.post("/", checkoutLimiter, async (req, res) => {
     const code = err.message;
     if (code === "SLOT_NOT_FOUND") {
       return res.status(404).json({ ok: false, error: "Selected time slot not found." });
+    }
+    if (code === "SLOT_NOT_PUBLIC") {
+      return res.status(400).json({ ok: false, error: "Selected time slot is not available for booking." });
     }
     if (code === "SLOT_TAKEN") {
       return res.status(409).json({ ok: false, error: "That time was just requested. Please choose another." });

@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const config = require("../config");
 const db = require("../db");
 
+const JWT_ALGORITHMS = ["HS256"];
+
 function authRequired(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
@@ -11,7 +13,7 @@ function authRequired(req, res, next) {
   }
 
   try {
-    const payload = jwt.verify(token, config.jwtSecret);
+    const payload = jwt.verify(token, config.jwtSecret, { algorithms: JWT_ALGORITHMS });
     const user = db
       .prepare("SELECT id, email, name, role, active FROM users WHERE id = ?")
       .get(payload.sub);
@@ -34,4 +36,4 @@ function adminRequired(req, res, next) {
   next();
 }
 
-module.exports = { authRequired, adminRequired };
+module.exports = { authRequired, adminRequired, JWT_ALGORITHMS };
