@@ -17,7 +17,7 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 12px 20px;
   background: var(--color-surface-alt);
   border-bottom: 1px solid var(--color-border);
 }
@@ -50,7 +50,7 @@ body {
   font-weight: 700;
   color: var(--color-primary);
   margin: 32px 0 12px;
-  padding: 0 4px;
+  padding: 0;
   letter-spacing: -0.01em;
 }
 
@@ -62,6 +62,8 @@ body {
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
+  padding: 0 20px 24px;
+  box-sizing: border-box;
   overflow: visible;
   height: auto;
   position: relative;

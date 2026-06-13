@@ -1,7 +1,7 @@
 .service-search-wrap {
   max-width: 720px;
   margin: 16px auto 20px;
-  padding: 0 18px;
+  padding: 0 20px;
 }
 
 .services-page .service-search-wrap {
@@ -36,7 +36,7 @@
   text-align: center;
   color: var(--color-muted);
   font-size: 0.9375rem;
-  padding: 24px 18px;
+  padding: 24px 20px;
   margin: 0;
 }
 
@@ -51,7 +51,7 @@
 .service-search-results {
   max-width: 960px;
   margin: 0 auto 32px;
-  padding: 0 18px;
+  padding: 0 20px;
 }
 
 .services-page .service-search-results,
