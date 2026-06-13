@@ -2,6 +2,7 @@
   --rhs-blue: #2d4a7a;
   --rhs-light: #f3f6fa;
   --danger: #b00020;
+  --footer-height: 5.5rem;
 }
 
 * {
@@ -10,6 +11,7 @@
 
 body {
   margin: 0;
+  padding-bottom: var(--footer-height);
   font-family: "DM Sans", system-ui, sans-serif;
   background: #f5f5f5;
   color: #222;
@@ -571,10 +573,15 @@ select {
 }
 
 .site-footer {
-  margin-top: 32px;
-  padding: 20px 32px 28px;
-  border-top: none;
-  background: #c5e84a;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 0;
+  padding: 16px 32px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid #ddd;
+  background: #f3f6fa;
   text-align: center;
 }
 
@@ -582,7 +589,7 @@ select {
   margin: 0 auto;
   max-width: 640px;
   padding: 0 12px;
-  font-size: 0.75rem;
-  line-height: 1.65;
-  color: #1e3558;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #666;
 }
