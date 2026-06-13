@@ -155,6 +155,46 @@
 
     denyBooking: function (id) {
       return api("/bookings/" + encodeURIComponent(id) + "/deny", { method: "POST" });
+    },
+
+    listGalleryImages: function () {
+      return api("/gallery/manage/list");
+    },
+
+    uploadGalleryImage: function (caption, mimeType, dataBase64) {
+      return api("/gallery", {
+        method: "POST",
+        body: JSON.stringify({ caption: caption, mimeType: mimeType, dataBase64: dataBase64 })
+      });
+    },
+
+    reorderGalleryImages: function (order) {
+      return api("/gallery/reorder", {
+        method: "PUT",
+        body: JSON.stringify({ order: order })
+      });
+    },
+
+    updateGalleryCaption: function (id, caption) {
+      return api("/gallery/" + encodeURIComponent(id), {
+        method: "PUT",
+        body: JSON.stringify({ caption: caption })
+      });
+    },
+
+    deleteGalleryImage: function (id) {
+      return api("/gallery/" + encodeURIComponent(id), { method: "DELETE" });
+    },
+
+    galleryImageUrl: function (imagePath) {
+      var base = getApiBase();
+      if (imagePath.indexOf("/api/") === 0) {
+        return base.replace(/\/api$/, "") + imagePath;
+      }
+      if (imagePath.indexOf("/") === 0) {
+        return base + imagePath;
+      }
+      return base + "/" + imagePath;
     }
   };
 })();

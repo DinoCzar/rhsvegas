@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Staff Portal | Ryan's Home Solutions</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css?v=20260610">
+  <link rel="stylesheet" href="css/admin.css?v=20260613">
 </head>
 <body>
 
@@ -33,7 +33,15 @@
     <button type="button" id="logout-btn">Sign Out</button>
   </header>
 
-  <div class="admin-wrap">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <nav class="admin-sidebar-nav" aria-label="Staff portal sections">
+        <a class="admin-nav-link is-active" href="/admin/">Scheduling</a>
+        <a class="admin-nav-link" href="/admin/gallery.html">Gallery</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
     <div id="employee-select-wrap" class="card hidden">
       <label for="employee-select">Managing availability for</label>
       <select id="employee-select"></select>
@@ -113,6 +121,7 @@
         <p class="status" id="employee-status"></p>
       </form>
     </div>
+    </main>
   </div>
 </div>
 

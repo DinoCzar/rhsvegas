@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery | Staff Portal | Ryan's Home Solutions</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=20260613">
+</head>
+<body>
+
+<div id="login-view" class="login-wrap">
+  <div class="login-card">
+    <h1>Staff Login</h1>
+    <p>Manage photos shown on the public gallery page.</p>
+    <form id="login-form">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button class="btn-primary" type="submit" style="width:100%">Sign In</button>
+      <p class="status error" id="login-status"></p>
+    </form>
+  </div>
+</div>
+
+<div id="app-view" class="hidden">
+  <header class="admin-header">
+    <div>
+      <h1>Ryan's Home Solutions — Staff Portal</h1>
+      <div class="user-badge" id="user-label"></div>
+    </div>
+    <button type="button" id="logout-btn">Sign Out</button>
+  </header>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <nav class="admin-sidebar-nav" aria-label="Staff portal sections">
+        <a class="admin-nav-link" href="/admin/">Scheduling</a>
+        <a class="admin-nav-link is-active" href="/admin/gallery.html">Gallery</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="card">
+        <h2>Public Gallery</h2>
+        <p class="card-help">Upload photos for the website gallery page. Reorder them with the up and down buttons — the top photo appears first on the site.</p>
+
+        <form id="gallery-upload-form">
+          <label for="gallery-file">Photo</label>
+          <input id="gallery-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+          <label for="gallery-caption">Caption (optional)</label>
+          <input id="gallery-caption" type="text" maxlength="200" placeholder="e.g. TV mount installation">
+          <button class="btn-primary" type="submit">Upload Photo</button>
+          <p class="status" id="gallery-upload-status"></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Gallery Photos</h2>
+        <p class="status" id="gallery-list-status">Loading…</p>
+        <ul class="gallery-admin-list" id="gallery-admin-list"></ul>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/admin.js?v=20260613"></script>
+<script src="js/gallery-ui.js?v=20260613"></script>
+
+</body>
+</html>

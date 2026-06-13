@@ -12,6 +12,7 @@ const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
 const bookingsRoutes = require("./routes/bookings");
+const galleryRoutes = require("./routes/gallery");
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/bookings", bookingsRoutes);
+app.use("/api/gallery", galleryRoutes);
 
 var adminCandidates = [
   path.join(__dirname, "../../admin"),
