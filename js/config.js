@@ -28,7 +28,7 @@
     cartUrl: "/cart",
     checkoutUrl: "/checkout",
     confirmationUrl: "/confirmation",
-    servicesUrl: "/services",
+    servicesUrl: "/services/",
     assemblyUrl: "/assembly",
     installationUrl: "/installation",
     otherServicesUrl: "/other-services",
