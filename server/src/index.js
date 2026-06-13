@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const config = require("./config");
 const { ensureAdminUser } = require("./bootstrap-admin");
+const { getEmailStatus, verifySmtpConnection } = require("./services/email");
 const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
@@ -49,7 +50,19 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true, service: "rhsvegas-api" });
+  var email = getEmailStatus();
+  res.json({
+    ok: true,
+    service: "rhsvegas-api",
+    email: {
+      configured: email.configured,
+      ownerEmailSet: email.ownerEmailSet,
+      smtpHost: email.smtpHost,
+      smtpUser: email.smtpUser,
+      fromAddress: email.fromAddress,
+      ownerEmail: email.ownerEmail
+    }
+  });
 });
 
 app.use("/api/auth", authRoutes);
@@ -79,8 +92,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ ok: false, error: "Internal server error." });
 });
 
-app.listen(config.port, "0.0.0.0", () => {
+app.listen(config.port, "0.0.0.0", function () {
   ensureAdminUser();
   console.log("RHS Vegas API listening on port " + config.port);
   console.log("Employee portal: /admin/");
+
+  verifySmtpConnection().then(function (result) {
+    if (result.ok) {
+      console.log("[email] SMTP connection verified.");
+    } else if (result.reason === "smtp_not_configured") {
+      console.warn("[email] SMTP not configured — booking emails will not send.");
+    } else {
+      console.error("[email] SMTP connection test failed:", result.detail || result.reason);
+    }
+  });
 });
