@@ -38,6 +38,34 @@ router.get("/me", authRequired, (req, res) => {
   res.json({ ok: true, user: req.user });
 });
 
+router.post("/test-email", authRequired, adminRequired, async (req, res) => {
+  const { sendTestEmail, getEmailStatus } = require("../services/email");
+  const status = getEmailStatus();
+
+  if (!status.configured) {
+    return res.status(503).json({
+      ok: false,
+      error: "SMTP is not configured. Add SMTP_HOST, SMTP_USER, and SMTP_PASS in Render Environment."
+    });
+  }
+
+  const to = (req.body && req.body.to ? String(req.body.to) : status.ownerEmail || req.user.email).trim();
+  if (!to || !isValidEmail(to)) {
+    return res.status(400).json({ ok: false, error: "Valid email address required." });
+  }
+
+  try {
+    const result = await sendTestEmail(to);
+    res.json({ ok: true, result: result });
+  } catch (err) {
+    res.status(502).json({
+      ok: false,
+      error: "Failed to send test email.",
+      detail: err.response || err.message
+    });
+  }
+});
+
 router.post("/users", authRequired, adminRequired, (req, res) => {
   const { email, password, name, role } = req.body || {};
   if (!email || !password || !name) {

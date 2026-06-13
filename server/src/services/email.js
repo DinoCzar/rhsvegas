@@ -54,14 +54,49 @@ async function sendMail(options) {
     throw new Error("SMTP is not configured on the server.");
   }
 
-  await transport.sendMail(
-    Object.assign(
-      {
-        from: getFromAddress()
-      },
-      options
-    )
-  );
+  try {
+    await transport.sendMail(
+      Object.assign(
+        {
+          from: getFromAddress()
+        },
+        options
+      )
+    );
+  } catch (err) {
+    var detail = err.response || err.message || String(err);
+    console.error("[email] SMTP send failed:", detail);
+    throw err;
+  }
+}
+
+function getEmailStatus() {
+  var ownerEmail = getOwnerEmail();
+  return {
+    configured: isEmailConfigured(),
+    ownerEmailSet: Boolean(ownerEmail),
+    smtpHost: config.smtp.host || null,
+    smtpPort: config.smtp.port || null,
+    smtpUser: config.smtp.user || null,
+    fromAddress: isEmailConfigured() ? getFromAddress() : null,
+    ownerEmail: ownerEmail || null
+  };
+}
+
+async function verifySmtpConnection() {
+  if (!isEmailConfigured()) {
+    return { ok: false, reason: "smtp_not_configured" };
+  }
+
+  var transport = getTransporter();
+  try {
+    await transport.verify();
+    return { ok: true };
+  } catch (err) {
+    var detail = err.response || err.message || String(err);
+    console.error("[email] SMTP connection test failed:", detail);
+    return { ok: false, reason: "smtp_connection_failed", detail: detail };
+  }
 }
 
 async function sendNewBookingRequestEmail(booking, items, employeeName) {
@@ -188,18 +223,62 @@ async function sendBookingConfirmationEmail(booking, items, employeeName) {
 }
 
 async function sendCheckoutEmails(booking, items, employeeName) {
-  var ownerResult = await sendNewBookingRequestEmail(booking, items, employeeName);
-  var customerResult = await sendBookingRequestReceivedEmail(booking, items);
+  var ownerResult;
+  var customerResult;
+
+  try {
+    ownerResult = await sendNewBookingRequestEmail(booking, items, employeeName);
+  } catch (err) {
+    console.error("[email] Owner notification failed:", err.message);
+    ownerResult = { sent: false, reason: "send_failed", error: err.message };
+  }
+
+  try {
+    customerResult = await sendBookingRequestReceivedEmail(booking, items);
+  } catch (err) {
+    console.error("[email] Customer request email failed:", err.message);
+    customerResult = { sent: false, reason: "send_failed", error: err.message };
+  }
+
+  console.log("[email] Checkout emails:", {
+    orderId: booking.order_id,
+    owner: ownerResult,
+    customer: customerResult
+  });
+
   return {
     owner: ownerResult,
     customer: customerResult
   };
 }
 
+async function sendTestEmail(to) {
+  if (!isEmailConfigured()) {
+    return { sent: false, reason: "smtp_not_configured" };
+  }
+
+  await sendMail({
+    to: to,
+    subject: "RHS Vegas email test — " + config.businessName,
+    text: [
+      "This is a test email from your Ryan's Home Solutions booking server.",
+      "",
+      "If you received this, SMTP is working correctly.",
+      "",
+      "Sent: " + businessNowIso().replace("T", " ") + " PT"
+    ].join("\n")
+  });
+
+  return { sent: true, to: to };
+}
+
 module.exports = {
   isEmailConfigured,
+  getEmailStatus,
+  verifySmtpConnection,
   sendNewBookingRequestEmail,
   sendBookingRequestReceivedEmail,
   sendBookingConfirmationEmail,
-  sendCheckoutEmails
+  sendCheckoutEmails,
+  sendTestEmail
 };
