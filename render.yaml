@@ -78,3 +78,12 @@ services:
       - type: rewrite
         source: /other-services
         destination: /other-services/index.html
+      - type: rewrite
+        source: /gallery
+        destination: /gallery/index.html
+      - type: rewrite
+        source: /our-mission
+        destination: /our-mission/index.html
+      - type: rewrite
+        source: /contact
+        destination: /contact/index.html

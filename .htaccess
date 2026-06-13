@@ -1,0 +1,21 @@
+# GoDaddy / Apache — Ryan's Home Solutions static site
+
+DirectoryIndex index.html
+
+RewriteEngine On
+
+# Pretty URLs (match Render rewrites)
+RewriteRule ^cart/?$ /cart/index.html [L]
+RewriteRule ^checkout/?$ /checkout/index.html [L]
+RewriteRule ^confirmation/?$ /confirmation/index.html [L]
+RewriteRule ^services/?$ /services/index.html [L]
+RewriteRule ^assembly/?$ /assembly/index.html [L]
+RewriteRule ^installation/?$ /installation/index.html [L]
+RewriteRule ^other-services/?$ /other-services/index.html [L]
+RewriteRule ^gallery/?$ /gallery/index.html [L]
+RewriteRule ^our-mission/?$ /our-mission/index.html [L]
+RewriteRule ^contact/?$ /contact/index.html [L]
+
+# Optional: redirect www to non-www (uncomment and set your domain)
+# RewriteCond %{HTTP_HOST} ^www\.rhsvegas\.com$ [NC]
+# RewriteRule ^(.*)$ https://rhsvegas.com/$1 [L,R=301]
