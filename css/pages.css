@@ -255,6 +255,11 @@
   margin-top: 32px;
 }
 
+.content-page .status.error {
+  color: #c62828;
+  margin-top: 16px;
+}
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

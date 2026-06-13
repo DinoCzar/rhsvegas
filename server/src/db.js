@@ -143,6 +143,17 @@ var SCHEMA = `
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (reviewed_by) REFERENCES users(id)
   );
+
+  CREATE TABLE IF NOT EXISTS gallery_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    caption TEXT NOT NULL DEFAULT '',
+    mime_type TEXT NOT NULL,
+    image_data TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_gallery_sort ON gallery_images(sort_order, id);
 `;
 
 async function runOptionalMigration(sql) {
