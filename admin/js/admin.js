@@ -43,12 +43,26 @@
     }
     return fetch(getApiBase() + path, Object.assign({}, options, { headers: headers }))
       .then(function (res) {
-        return res.json().then(function (data) {
-          if (!res.ok) {
-            throw new Error(data.error || "Request failed.");
-          }
-          return data;
-        });
+        return res
+          .json()
+          .catch(function () {
+            if (res.status === 429) {
+              throw new Error("Too many login attempts. Please wait 15 minutes and try again.");
+            }
+            throw new Error("Could not reach the server. Try refreshing the page.");
+          })
+          .then(function (data) {
+            if (!res.ok) {
+              throw new Error(data.error || "Request failed.");
+            }
+            return data;
+          });
+      })
+      .catch(function (err) {
+        if (err.message === "Failed to fetch") {
+          throw new Error("Could not reach the server. Check your connection and try again.");
+        }
+        throw err;
       });
   }
 

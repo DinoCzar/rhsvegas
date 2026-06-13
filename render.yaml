@@ -27,6 +27,16 @@ services:
         sync: false
       - key: OWNER_EMAIL
         sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
       - key: FRONTEND_ORIGINS
         value: https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site.onrender.com,https://rhsvegas-site-c5y0.onrender.com,https://rhsvegas-api-c5y0.onrender.com,https://api.rhsvegas.com
       - key: DATABASE_PATH

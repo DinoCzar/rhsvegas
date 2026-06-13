@@ -1,7 +1,7 @@
 const express = require("express");
 const db = require("../db");
 const { makeOrderId, isValidEmail, isWallClockPast } = require("../utils");
-const { sendNewBookingRequestEmail } = require("../services/email");
+const { sendCheckoutEmails } = require("../services/email");
 const { validateOrderItems } = require("../services/pricing");
 const { checkoutLimiter } = require("../middleware/rate-limit");
 const { BOOKING_STATUS } = require("../constants/bookings");
@@ -119,9 +119,9 @@ router.post("/", checkoutLimiter, async (req, res) => {
     };
 
     try {
-      await sendNewBookingRequestEmail(booking, validatedItems.items, slot.employee_name);
+      await sendCheckoutEmails(booking, validatedItems.items, slot.employee_name);
     } catch (emailErr) {
-      console.error("[email] Failed to send:", emailErr.message);
+      console.error("[email] Failed to send checkout emails:", emailErr.message);
     }
 
     res.json({
