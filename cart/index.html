@@ -54,7 +54,7 @@
 
   <div class="actions">
     <a class="btn btn-primary" id="checkout-btn" href="/checkout">Proceed to Checkout</a>
-    <button class="remove-btn" id="clear-cart-btn" type="button">Clear Cart</button>
+    <button class="remove-btn" id="clear-cart-btn" type="button">Clear cart &amp; start over</button>
   </div>
   <p class="note">Custom-priced items are listed as TBD. Final pricing may be confirmed before your appointment.</p>
   <a class="btn-secondary" href="/services/">← Continue shopping</a>
@@ -121,7 +121,7 @@
     });
 
     clearBtn.addEventListener("click", function () {
-      if (confirm("Remove all items from your cart?")) {
+      if (confirm("Clear your cart and start a new order?")) {
         RHSCart.clear();
         renderCart();
       }
