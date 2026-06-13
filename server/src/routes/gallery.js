@@ -8,8 +8,6 @@ const router = express.Router();
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-router.use(express.json({ limit: "5mb" }));
-
 function imageResponse(row, req) {
   return {
     id: row.id,
@@ -89,6 +87,7 @@ router.get(
 
     const buffer = Buffer.from(row.image_data, "base64");
     res.set("Cache-Control", "public, max-age=3600");
+    res.set("Cross-Origin-Resource-Policy", "cross-origin");
     res.type(row.mime_type);
     res.send(buffer);
   })
@@ -127,6 +126,10 @@ router.post(
       "SELECT id, caption, mime_type, sort_order, created_at FROM gallery_images WHERE id = ?",
       [result.lastInsertRowid]
     );
+
+    if (!row) {
+      throw new Error("GALLERY_INSERT_FAILED");
+    }
 
     res.status(201).json({
       ok: true,
