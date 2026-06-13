@@ -20,7 +20,8 @@ app.set("trust proxy", 1);
 
 app.use(
   helmet({
-    contentSecurityPolicy: false
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
   })
 );
 
@@ -48,6 +49,8 @@ app.use(
     credentials: true
   })
 );
+
+app.use("/api/gallery", express.json({ limit: "10mb" }), galleryRoutes);
 
 app.use(express.json({ limit: "1mb" }));
 
@@ -79,7 +82,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/bookings", bookingsRoutes);
-app.use("/api/gallery", galleryRoutes);
 
 var adminCandidates = [
   path.join(__dirname, "../../admin"),
@@ -96,6 +98,12 @@ if (adminPath) {
 }
 
 app.use((err, req, res, next) => {
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({
+      ok: false,
+      error: "Upload is too large. Try a smaller photo (max 3 MB)."
+    });
+  }
   if (err.message === "Not allowed by CORS") {
     return res.status(403).json({ ok: false, error: "Origin not allowed." });
   }

@@ -42,6 +42,52 @@
     });
   }
 
+  function prepareUploadFile(file) {
+    if (!file || !String(file.type || "").match(/^image\//)) {
+      return Promise.reject(new Error("Choose a JPG, PNG, WebP, or GIF photo."));
+    }
+
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var maxWidth = 1600;
+        var scale = Math.min(1, maxWidth / img.width);
+        var width = Math.max(1, Math.round(img.width * scale));
+        var height = Math.max(1, Math.round(img.height * scale));
+        var canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          function (blob) {
+            if (!blob) {
+              reject(new Error("Could not process the selected photo."));
+              return;
+            }
+            resolve(
+              new File([blob], (file.name || "gallery-photo").replace(/\.[^.]+$/, ".jpg"), {
+                type: "image/jpeg"
+              })
+            );
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not load the selected photo. Try JPG or PNG."));
+      };
+
+      img.src = url;
+    });
+  }
+
   function renderGallery() {
     if (!images.length) {
       listEl.innerHTML = "";
@@ -162,9 +208,15 @@
     uploadStatus.textContent = "Uploading…";
     uploadStatus.className = "status";
 
-    readFileAsBase64(file)
-      .then(function (dataBase64) {
-        return RHSAdmin.uploadGalleryImage(captionInput.value.trim(), file.type, dataBase64);
+    prepareUploadFile(file)
+      .then(function (preparedFile) {
+        return readFileAsBase64(preparedFile).then(function (dataBase64) {
+          return RHSAdmin.uploadGalleryImage(
+            captionInput.value.trim(),
+            preparedFile.type,
+            dataBase64
+          );
+        });
       })
       .then(function () {
         uploadStatus.textContent = "Photo uploaded.";
