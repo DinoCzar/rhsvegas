@@ -38,21 +38,22 @@ img {
   min-height: calc(100dvh - var(--header-height));
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   padding: 48px 24px;
-  background-color: #2a3544;
+  background-color: #f5f7fa;
   background-image:
-    linear-gradient(var(--rhs-overlay), var(--rhs-overlay)),
-    url("https://img1.wsimg.com/isteam/getty/484930258/:/cr=t:0%,l:0%,w:100%,h:100%/rs=w:1920");
+    linear-gradient(90deg, rgba(30, 53, 88, 0.88) 0%, rgba(30, 53, 88, 0.72) 42%, rgba(30, 53, 88, 0.2) 100%),
+    url("/images/hero-tools-bg.png");
   background-size: cover;
-  background-position: center;
+  background-position: center right;
   color: #fff;
 }
 
 .hero-content {
   max-width: 900px;
-  margin: 0 auto;
+  margin: 0;
+  padding-left: clamp(16px, 6vw, 80px);
 }
 
 .hero h1 {
@@ -68,7 +69,7 @@ img {
   font-family: var(--font-body);
   font-size: clamp(1rem, 2.2vw, 1.2rem);
   line-height: 1.6;
-  margin: 0 auto 32px;
+  margin: 0 0 32px;
   max-width: 640px;
   font-weight: 400;
   opacity: 0.95;
