@@ -165,7 +165,14 @@
       var btn = category.querySelector(".dropdown-btn");
       var content = category.querySelector(".content");
       var categoryLabel = btn ? btn.querySelector("span:first-child").textContent : "";
-      var categoryMatch = q && normalize(categoryLabel).indexOf(q) !== -1;
+      var sectionHeading = category.previousElementSibling;
+      var sectionLabel =
+        sectionHeading && sectionHeading.classList.contains("service-section-heading")
+          ? sectionHeading.textContent
+          : "";
+      var categoryMatch =
+        q &&
+        (normalize(categoryLabel).indexOf(q) !== -1 || normalize(sectionLabel).indexOf(q) !== -1);
       var visibleItems = 0;
 
       category.querySelectorAll(".item").forEach(function (item) {
@@ -223,6 +230,27 @@
     if (emptyMsg) {
       emptyMsg.hidden = !q || anyVisible;
     }
+
+    document.querySelectorAll(".service-section-heading").forEach(function (heading) {
+      if (!q) {
+        heading.classList.remove("search-hidden");
+        return;
+      }
+
+      var sectionMatch = normalize(heading.textContent).indexOf(q) !== -1;
+      var next = heading.nextElementSibling;
+      var sectionHasVisible = sectionMatch;
+
+      while (next && !next.classList.contains("service-section-heading")) {
+        if (next.classList.contains("category") && !next.classList.contains("search-hidden")) {
+          sectionHasVisible = true;
+          break;
+        }
+        next = next.nextElementSibling;
+      }
+
+      heading.classList.toggle("search-hidden", !sectionHasVisible);
+    });
   }
 
   function filterServiceTiles(query) {
