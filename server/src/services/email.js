@@ -4,8 +4,18 @@ const { formatDateTimeLong, businessNowIso } = require("../utils");
 
 let transporter = null;
 
+function getEmailProvider() {
+  if (config.resend.apiKey) {
+    return "resend";
+  }
+  if (config.smtp.host && config.smtp.user && config.smtp.pass) {
+    return "smtp";
+  }
+  return null;
+}
+
 function isEmailConfigured() {
-  return Boolean(config.smtp.host && config.smtp.user && config.smtp.pass);
+  return Boolean(getEmailProvider());
 }
 
 function getOwnerEmail() {
@@ -13,15 +23,29 @@ function getOwnerEmail() {
 }
 
 function getFromAddress() {
-  var from = (config.smtp.from || "").trim();
-  if (!from || from.indexOf("@") === -1) {
+  var from = (config.emailFrom || config.smtp.from || "").trim();
+  if (from && from.indexOf("@") !== -1) {
+    return from;
+  }
+  if (config.smtp.user) {
     return config.smtp.user;
   }
-  return from;
+  return "";
+}
+
+function formatFromHeader() {
+  var address = getFromAddress();
+  if (!address) {
+    return config.businessName + " <onboarding@resend.dev>";
+  }
+  if (address.indexOf("<") !== -1) {
+    return address;
+  }
+  return config.businessName + " <" + address + ">";
 }
 
 function getTransporter() {
-  if (!isEmailConfigured()) {
+  if (getEmailProvider() !== "smtp") {
     return null;
   }
   if (!transporter) {
@@ -51,7 +75,38 @@ function formatItemsList(items) {
     .join("\n");
 }
 
-async function sendMail(options) {
+async function sendViaResend(options) {
+  var response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + config.resend.apiKey,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from: formatFromHeader(),
+      to: Array.isArray(options.to) ? options.to : [options.to],
+      subject: options.subject,
+      text: options.text
+    })
+  });
+
+  var data = {};
+  try {
+    data = await response.json();
+  } catch (err) {
+    data = {};
+  }
+
+  if (!response.ok) {
+    var detail = data.message || data.error || "Resend API error " + response.status;
+    console.error("[email] Resend send failed:", detail);
+    throw new Error(detail);
+  }
+
+  return data;
+}
+
+async function sendViaSmtp(options) {
   var transport = getTransporter();
   if (!transport) {
     throw new Error("SMTP is not configured on the server.");
@@ -73,32 +128,50 @@ async function sendMail(options) {
   }
 }
 
+async function sendMail(options) {
+  if (getEmailProvider() === "resend") {
+    return sendViaResend(options);
+  }
+  if (getEmailProvider() === "smtp") {
+    return sendViaSmtp(options);
+  }
+  throw new Error("Email is not configured on the server.");
+}
+
 function getEmailStatus() {
   var ownerEmail = getOwnerEmail();
+  var provider = getEmailProvider();
   return {
-    configured: isEmailConfigured(),
+    configured: Boolean(provider),
+    provider: provider,
     ownerEmailSet: Boolean(ownerEmail),
     smtpHost: config.smtp.host || null,
     smtpPort: config.smtp.port || null,
     smtpUser: config.smtp.user || null,
-    fromAddress: isEmailConfigured() ? getFromAddress() : null,
-    ownerEmail: ownerEmail || null
+    fromAddress: provider ? getFromAddress() || null : null,
+    ownerEmail: ownerEmail || null,
+    resendConfigured: Boolean(config.resend.apiKey)
   };
 }
 
 async function verifySmtpConnection() {
-  if (!isEmailConfigured()) {
-    return { ok: false, reason: "smtp_not_configured" };
+  var provider = getEmailProvider();
+  if (!provider) {
+    return { ok: false, reason: "email_not_configured" };
+  }
+
+  if (provider === "resend") {
+    return { ok: true, provider: "resend" };
   }
 
   var transport = getTransporter();
   try {
     await transport.verify();
-    return { ok: true };
+    return { ok: true, provider: "smtp" };
   } catch (err) {
     var detail = err.response || err.message || String(err);
     console.error("[email] SMTP connection test failed:", detail);
-    return { ok: false, reason: "smtp_connection_failed", detail: detail };
+    return { ok: false, reason: "smtp_connection_failed", detail: detail, provider: "smtp" };
   }
 }
 
@@ -134,9 +207,9 @@ async function sendNewBookingRequestEmail(booking, items, employeeName) {
   ].join("\n");
 
   if (!isEmailConfigured()) {
-    console.warn("[email] SMTP not configured — owner notification was not sent.");
+    console.warn("[email] Email not configured — owner notification was not sent.");
     console.log(ownerBody);
-    return { sent: false, reason: "smtp_not_configured" };
+    return { sent: false, reason: "email_not_configured" };
   }
 
   if (!ownerEmail) {
@@ -177,8 +250,8 @@ async function sendBookingRequestReceivedEmail(booking, items) {
   ].join("\n");
 
   if (!isEmailConfigured()) {
-    console.warn("[email] SMTP not configured — customer request email was not sent.");
-    return { sent: false, reason: "smtp_not_configured" };
+    console.warn("[email] Email not configured — customer request email was not sent.");
+    return { sent: false, reason: "email_not_configured" };
   }
 
   await sendMail({
@@ -211,9 +284,9 @@ async function sendBookingConfirmationEmail(booking, items, employeeName) {
   ].join("\n");
 
   if (!isEmailConfigured()) {
-    console.warn("[email] SMTP not configured — confirmation email was not sent.");
+    console.warn("[email] Email not configured — confirmation email was not sent.");
     console.log(customerBody);
-    return { sent: false, reason: "smtp_not_configured" };
+    return { sent: false, reason: "email_not_configured" };
   }
 
   await sendMail({
@@ -257,7 +330,7 @@ async function sendCheckoutEmails(booking, items, employeeName) {
 
 async function sendTestEmail(to) {
   if (!isEmailConfigured()) {
-    return { sent: false, reason: "smtp_not_configured" };
+    return { sent: false, reason: "email_not_configured" };
   }
 
   await sendMail({
@@ -266,13 +339,14 @@ async function sendTestEmail(to) {
     text: [
       "This is a test email from your Ryan's Home Solutions booking server.",
       "",
-      "If you received this, SMTP is working correctly.",
+      "If you received this, email delivery is working correctly.",
       "",
+      "Provider: " + getEmailProvider(),
       "Sent: " + businessNowIso().replace("T", " ") + " PT"
     ].join("\n")
   });
 
-  return { sent: true, to: to };
+  return { sent: true, to: to, provider: getEmailProvider() };
 }
 
 module.exports = {

@@ -58,11 +58,13 @@ app.get("/api/health", (req, res) => {
     renderService: process.env.RENDER_SERVICE_NAME || null,
     email: {
       configured: email.configured,
+      provider: email.provider,
       ownerEmailSet: email.ownerEmailSet,
       smtpHost: email.smtpHost,
       smtpUser: email.smtpUser,
       fromAddress: email.fromAddress,
-      ownerEmail: email.ownerEmail
+      ownerEmail: email.ownerEmail,
+      resendConfigured: email.resendConfigured
     }
   });
 });
@@ -100,12 +102,14 @@ app.listen(config.port, "0.0.0.0", function () {
   console.log("Employee portal: /admin/");
 
   verifySmtpConnection().then(function (result) {
-    if (result.ok) {
+    if (result.ok && result.provider === "resend") {
+      console.log("[email] Resend API configured.");
+    } else if (result.ok) {
       console.log("[email] SMTP connection verified.");
-    } else if (result.reason === "smtp_not_configured") {
-      console.warn("[email] SMTP not configured — booking emails will not send.");
+    } else if (result.reason === "email_not_configured") {
+      console.warn("[email] Email not configured — booking emails will not send.");
     } else {
-      console.error("[email] SMTP connection test failed:", result.detail || result.reason);
+      console.error("[email] Email connection test failed:", result.detail || result.reason);
     }
   });
 });

@@ -45,7 +45,7 @@ router.post("/test-email", authRequired, adminRequired, async (req, res) => {
   if (!status.configured) {
     return res.status(503).json({
       ok: false,
-      error: "SMTP is not configured. Add SMTP_HOST, SMTP_USER, and SMTP_PASS in Render Environment."
+      error: "Email is not configured. Add RESEND_API_KEY and EMAIL_FROM in Render Environment."
     });
   }
 
