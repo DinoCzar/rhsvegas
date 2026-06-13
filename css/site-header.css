@@ -155,7 +155,7 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 12px 20px;
   background: var(--color-surface-alt);
   border-bottom: 1px solid var(--color-border);
 }
