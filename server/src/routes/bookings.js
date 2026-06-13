@@ -3,7 +3,8 @@ const db = require("../db");
 const { authRequired, adminRequired } = require("../middleware/auth");
 const { BOOKING_STATUS } = require("../constants/bookings");
 const { formatAppointmentTime, formatDateTimeLong } = require("../utils");
-const { sendBookingConfirmationEmail, sendNewBookingRequestEmail } = require("../services/email");
+const { sendBookingConfirmationEmail } = require("../services/email");
+const { asyncHandler } = require("../async-handler");
 
 const router = express.Router();
 
@@ -35,98 +36,110 @@ function bookingToResponse(row) {
   };
 }
 
-function getBookingById(bookingId) {
-  return db
-    .prepare(
-      `
+async function getBookingById(bookingId) {
+  return db.get(
+    `
       SELECT b.*, s.start_at, s.end_at, u.name AS employee_name
       FROM bookings b
       JOIN availability_slots s ON s.id = b.slot_id
       JOIN users u ON u.id = b.user_id
       WHERE b.id = ?
-    `
-    )
-    .get(bookingId);
+    `,
+    [bookingId]
+  );
 }
 
-/** Admin: list booking requests */
-router.get("/requests", authRequired, adminRequired, (req, res) => {
-  const status = req.query.status || BOOKING_STATUS.PENDING;
-  const allowed = [BOOKING_STATUS.PENDING, BOOKING_STATUS.APPROVED, BOOKING_STATUS.DENIED, "all"];
-  if (allowed.indexOf(status) === -1) {
-    return res.status(400).json({ ok: false, error: "Invalid status filter." });
-  }
+router.get(
+  "/requests",
+  authRequired,
+  adminRequired,
+  asyncHandler(async function (req, res) {
+    const status = req.query.status || BOOKING_STATUS.PENDING;
+    const allowed = [BOOKING_STATUS.PENDING, BOOKING_STATUS.APPROVED, BOOKING_STATUS.DENIED, "all"];
+    if (allowed.indexOf(status) === -1) {
+      return res.status(400).json({ ok: false, error: "Invalid status filter." });
+    }
 
-  let sql = `
+    let sql = `
     SELECT b.*, s.start_at, s.end_at, u.name AS employee_name
     FROM bookings b
     JOIN availability_slots s ON s.id = b.slot_id
     JOIN users u ON u.id = b.user_id
   `;
-  const params = [];
+    const params = [];
 
-  if (status !== "all") {
-    sql += " WHERE b.status = ?";
-    params.push(status);
-  }
+    if (status !== "all") {
+      sql += " WHERE b.status = ?";
+      params.push(status);
+    }
 
-  sql += " ORDER BY b.created_at DESC";
+    sql += " ORDER BY b.created_at DESC";
 
-  const rows = db.prepare(sql).all(...params);
-  res.json({
-    ok: true,
-    bookings: rows.map(bookingToResponse)
-  });
-});
+    const rows = await db.all(sql, params);
+    res.json({
+      ok: true,
+      bookings: rows.map(bookingToResponse)
+    });
+  })
+);
 
-/** Admin: approve a pending booking request */
-router.post("/:id/approve", authRequired, adminRequired, async (req, res) => {
-  const bookingId = Number(req.params.id);
-  const booking = getBookingById(bookingId);
+router.post(
+  "/:id/approve",
+  authRequired,
+  adminRequired,
+  asyncHandler(async function (req, res) {
+    const bookingId = Number(req.params.id);
+    const booking = await getBookingById(bookingId);
 
-  if (!booking) {
-    return res.status(404).json({ ok: false, error: "Booking request not found." });
-  }
-  if (booking.status !== BOOKING_STATUS.PENDING) {
-    return res.status(409).json({ ok: false, error: "Only pending requests can be approved." });
-  }
+    if (!booking) {
+      return res.status(404).json({ ok: false, error: "Booking request not found." });
+    }
+    if (booking.status !== BOOKING_STATUS.PENDING) {
+      return res.status(409).json({ ok: false, error: "Only pending requests can be approved." });
+    }
 
-  db.prepare(
-    `
+    await db.run(
+      `
     UPDATE bookings
     SET status = ?, reviewed_at = datetime('now'), reviewed_by = ?
     WHERE id = ?
-  `
-  ).run(BOOKING_STATUS.APPROVED, req.user.id, bookingId);
+  `,
+      [BOOKING_STATUS.APPROVED, req.user.id, bookingId]
+    );
 
-  const items = JSON.parse(booking.items_json || "[]");
-  const updatedBooking = getBookingById(bookingId);
+    const items = JSON.parse(booking.items_json || "[]");
+    const updatedBooking = await getBookingById(bookingId);
 
-  res.json({
-    ok: true,
-    booking: bookingToResponse(updatedBooking)
-  });
+    res.json({
+      ok: true,
+      booking: bookingToResponse(updatedBooking)
+    });
 
-  sendBookingConfirmationEmail(booking, items, booking.employee_name).catch(function (emailErr) {
-    console.error("[email] Failed to send confirmation:", emailErr.message);
-  });
-});
+    sendBookingConfirmationEmail(booking, items, booking.employee_name).catch(function (emailErr) {
+      console.error("[email] Failed to send confirmation:", emailErr.message);
+    });
+  })
+);
 
-/** Admin: deny a pending booking request */
-router.post("/:id/deny", authRequired, adminRequired, (req, res) => {
-  const bookingId = Number(req.params.id);
-  const booking = getBookingById(bookingId);
+router.post(
+  "/:id/deny",
+  authRequired,
+  adminRequired,
+  asyncHandler(async function (req, res) {
+    const bookingId = Number(req.params.id);
+    const booking = await getBookingById(bookingId);
 
-  if (!booking) {
-    return res.status(404).json({ ok: false, error: "Booking request not found." });
-  }
-  if (booking.status !== BOOKING_STATUS.PENDING) {
-    return res.status(409).json({ ok: false, error: "Only pending requests can be denied." });
-  }
+    if (!booking) {
+      return res.status(404).json({ ok: false, error: "Booking request not found." });
+    }
+    if (booking.status !== BOOKING_STATUS.PENDING) {
+      return res.status(409).json({ ok: false, error: "Only pending requests can be denied." });
+    }
 
-  db.prepare("DELETE FROM bookings WHERE id = ?").run(bookingId);
+    await db.run("DELETE FROM bookings WHERE id = ?", [bookingId]);
 
-  res.json({ ok: true });
-});
+    res.json({ ok: true });
+  })
+);
 
 module.exports = router;

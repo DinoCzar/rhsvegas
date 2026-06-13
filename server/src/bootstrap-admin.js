@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const db = require("./db");
 
-function ensureAdminUser() {
+async function ensureAdminUser() {
   const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD || "";
   const name = process.env.ADMIN_NAME || "Admin";
@@ -20,31 +20,30 @@ function ensureAdminUser() {
     return;
   }
 
-  const existing = db
-    .prepare("SELECT id, password_hash, active, role FROM users WHERE email = ?")
-    .get(email);
+  const existing = await db.get("SELECT id, password_hash, active, role FROM users WHERE email = ?", [
+    email
+  ]);
 
   if (existing) {
     const passwordMatches = bcrypt.compareSync(password, existing.password_hash);
-    const needsUpdate =
-      !passwordMatches ||
-      !existing.active ||
-      existing.role !== "admin";
+    const needsUpdate = !passwordMatches || !existing.active || existing.role !== "admin";
 
     if (needsUpdate) {
       const hash = bcrypt.hashSync(password, 10);
-      db.prepare(
-        "UPDATE users SET password_hash = ?, name = ?, role = 'admin', active = 1 WHERE id = ?"
-      ).run(hash, name, existing.id);
+      await db.run(
+        "UPDATE users SET password_hash = ?, name = ?, role = 'admin', active = 1 WHERE id = ?",
+        [hash, name, existing.id]
+      );
       console.log("Synced admin account from environment:", email);
     }
     return;
   }
 
   const hash = bcrypt.hashSync(password, 10);
-  db.prepare(
-    "INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, 'admin')"
-  ).run(email, hash, name);
+  await db.run(
+    "INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, 'admin')",
+    [email, hash, name]
+  );
 
   console.log("Created admin user:", email);
 }

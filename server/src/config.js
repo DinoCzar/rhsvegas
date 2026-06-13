@@ -1,7 +1,12 @@
 require("dotenv").config();
 
+const path = require("path");
+
 var isProduction = process.env.NODE_ENV === "production";
 var jwtSecret = (process.env.JWT_SECRET || "").trim();
+var tursoDatabaseUrl = (process.env.TURSO_DATABASE_URL || "").trim();
+var tursoAuthToken = (process.env.TURSO_AUTH_TOKEN || "").trim();
+var databasePath = process.env.DATABASE_PATH || "./data/rhsvegas.db";
 
 if (!jwtSecret) {
   jwtSecret = "dev-only-change-in-production";
@@ -17,6 +22,20 @@ if (isProduction) {
     console.error("  1. Add or edit JWT_SECRET");
     console.error("  2. Use a long random string (run: openssl rand -base64 32)");
     console.error("  3. Save — Render will redeploy automatically");
+    console.error("");
+    process.exit(1);
+  }
+
+  if (!tursoDatabaseUrl || !tursoAuthToken) {
+    console.error("");
+    console.error("=== RHS Vegas API — startup failed ===");
+    console.error("Turso database credentials are required in production.");
+    console.error("");
+    console.error("Fix in Render dashboard → rhsvegas-api → Environment:");
+    console.error("  TURSO_DATABASE_URL  — from Turso dashboard (libsql://...)");
+    console.error("  TURSO_AUTH_TOKEN    — database auth token from Turso");
+    console.error("");
+    console.error("See RENDER-GODADDY.md for setup steps.");
     console.error("");
     process.exit(1);
   }
@@ -43,11 +62,20 @@ if (isProduction) {
   }
 }
 
+var tursoUrl = tursoDatabaseUrl;
+if (!tursoUrl) {
+  tursoUrl = "file:" + path.resolve(process.cwd(), databasePath);
+}
+
 module.exports = {
   port: Number(process.env.PORT) || 3001,
   jwtSecret: jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "24h",
-  databasePath: process.env.DATABASE_PATH || "./data/rhsvegas.db",
+  databasePath: databasePath,
+  turso: {
+    url: tursoUrl,
+    authToken: tursoAuthToken
+  },
   frontendOrigins: (process.env.FRONTEND_ORIGINS || "http://localhost:8080")
     .split(",")
     .map(function (s) {
