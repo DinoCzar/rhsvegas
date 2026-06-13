@@ -54,6 +54,8 @@ app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
     service: "rhsvegas-api",
+    host: req.get("host") || null,
+    renderService: process.env.RENDER_SERVICE_NAME || null,
     email: {
       configured: email.configured,
       ownerEmailSet: email.ownerEmailSet,

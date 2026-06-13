@@ -118,18 +118,16 @@ router.post("/", checkoutLimiter, async (req, res) => {
       end_at: slot.end_at
     };
 
-    try {
-      await sendCheckoutEmails(booking, validatedItems.items, slot.employee_name);
-    } catch (emailErr) {
-      console.error("[email] Failed to send checkout emails:", emailErr.message);
-    }
-
     res.json({
       ok: true,
       orderId: id,
       status: BOOKING_STATUS.PENDING,
       appointmentStart: slot.start_at,
       employeeName: slot.employee_name
+    });
+
+    sendCheckoutEmails(booking, validatedItems.items, slot.employee_name).catch(function (emailErr) {
+      console.error("[email] Failed to send checkout emails:", emailErr.message);
     });
   } catch (err) {
     const code = err.message;
