@@ -44,6 +44,20 @@ body {
   color: #fff;
 }
 
+.service-section-heading {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 32px 0 12px;
+  padding: 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.service-section-heading:first-child {
+  margin-top: 16px;
+}
+
 .accordion-container {
   width: 100%;
   max-width: 100%;
