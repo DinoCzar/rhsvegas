@@ -1,16 +1,76 @@
 (function () {
-  var CART_KEY = "rhs_cart";
+  var LEGACY_CART_KEY = "rhs_cart";
+  var COOKIE_NAME = "rhs_cart_token";
+  var COOKIE_MAX_AGE_DAYS = 30;
+
+  function getCookie(name) {
+    var match = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "=([^;]*)"));
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function setCartToken(token) {
+    var maxAge = COOKIE_MAX_AGE_DAYS * 24 * 60 * 60;
+    var host = window.location.hostname;
+    var domain = "";
+    if (host === "rhsvegas.com" || host.slice(-12) === ".rhsvegas.com") {
+      domain = "; Domain=.rhsvegas.com";
+    }
+    var secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie =
+      COOKIE_NAME +
+      "=" +
+      encodeURIComponent(token) +
+      domain +
+      "; Path=/; Max-Age=" +
+      maxAge +
+      "; SameSite=Lax" +
+      secure;
+  }
+
+  function createCartToken() {
+    return "c_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function getCartToken() {
+    var token = getCookie(COOKIE_NAME);
+    if (!token) {
+      token = createCartToken();
+      setCartToken(token);
+    }
+    return token;
+  }
+
+  function cartStorageKey() {
+    return "rhs_cart_" + getCartToken();
+  }
+
+  function migrateLegacyCart() {
+    try {
+      var legacy = localStorage.getItem(LEGACY_CART_KEY);
+      if (!legacy) {
+        return;
+      }
+      var items = JSON.parse(legacy);
+      if (Array.isArray(items) && items.length && !localStorage.getItem(cartStorageKey())) {
+        localStorage.setItem(cartStorageKey(), JSON.stringify(items));
+      }
+      localStorage.removeItem(LEGACY_CART_KEY);
+    } catch (e) {
+      localStorage.removeItem(LEGACY_CART_KEY);
+    }
+  }
 
   function readCart() {
+    migrateLegacyCart();
     try {
-      return JSON.parse(localStorage.getItem(CART_KEY)) || [];
+      return JSON.parse(localStorage.getItem(cartStorageKey())) || [];
     } catch (e) {
       return [];
     }
   }
 
   function writeCart(items) {
-    localStorage.setItem(CART_KEY, JSON.stringify(items));
+    localStorage.setItem(cartStorageKey(), JSON.stringify(items));
     updateCartBadge();
   }
 
@@ -87,6 +147,13 @@
     });
   }
 
+  function startNewCartSession() {
+    var oldKey = cartStorageKey();
+    localStorage.removeItem(oldKey);
+    setCartToken(createCartToken());
+    writeCart([]);
+  }
+
   window.RHSCart = {
     getItems: readCart,
 
@@ -109,7 +176,7 @@
     },
 
     clear: function () {
-      writeCart([]);
+      startNewCartSession();
     },
 
     getCount: function () {
@@ -124,7 +191,9 @@
 
     formatPrice: formatPrice,
 
-    updateBadge: updateCartBadge
+    updateBadge: updateCartBadge,
+
+    startNewCartSession: startNewCartSession
   };
 
   window.addToCart = function (name, price, priceLabel) {
