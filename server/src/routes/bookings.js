@@ -100,16 +100,15 @@ router.post("/:id/approve", authRequired, adminRequired, async (req, res) => {
   ).run(BOOKING_STATUS.APPROVED, req.user.id, bookingId);
 
   const items = JSON.parse(booking.items_json || "[]");
-
-  try {
-    await sendBookingConfirmationEmail(booking, items, booking.employee_name);
-  } catch (emailErr) {
-    console.error("[email] Failed to send confirmation:", emailErr.message);
-  }
+  const updatedBooking = getBookingById(bookingId);
 
   res.json({
     ok: true,
-    booking: bookingToResponse(getBookingById(bookingId))
+    booking: bookingToResponse(updatedBooking)
+  });
+
+  sendBookingConfirmationEmail(booking, items, booking.employee_name).catch(function (emailErr) {
+    console.error("[email] Failed to send confirmation:", emailErr.message);
   });
 });
 
