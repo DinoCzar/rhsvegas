@@ -22,6 +22,20 @@ if (isProduction) {
   }
 }
 
+if (isProduction) {
+  var smtpReady =
+    process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+  if (!smtpReady) {
+    console.warn("");
+    console.warn("=== RHS Vegas API — email not configured ===");
+    console.warn("Booking emails will NOT send until SMTP is set in Render Environment:");
+    console.warn("  SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, OWNER_EMAIL");
+    console.warn("");
+  } else if (!process.env.OWNER_EMAIL) {
+    console.warn("[email] OWNER_EMAIL is not set — owner alerts will fall back to SMTP_USER.");
+  }
+}
+
 module.exports = {
   port: Number(process.env.PORT) || 3001,
   jwtSecret: jwtSecret,

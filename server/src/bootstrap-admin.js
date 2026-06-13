@@ -13,8 +13,31 @@ function ensureAdminUser() {
     return;
   }
 
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+  if (password.length < 8) {
+    console.warn(
+      "ADMIN_PASSWORD must be at least 8 characters — admin login will not work until it is updated."
+    );
+    return;
+  }
+
+  const existing = db
+    .prepare("SELECT id, password_hash, active, role FROM users WHERE email = ?")
+    .get(email);
+
   if (existing) {
+    const passwordMatches = bcrypt.compareSync(password, existing.password_hash);
+    const needsUpdate =
+      !passwordMatches ||
+      !existing.active ||
+      existing.role !== "admin";
+
+    if (needsUpdate) {
+      const hash = bcrypt.hashSync(password, 10);
+      db.prepare(
+        "UPDATE users SET password_hash = ?, name = ?, role = 'admin', active = 1 WHERE id = ?"
+      ).run(hash, name, existing.id);
+      console.log("Synced admin account from environment:", email);
+    }
     return;
   }
 
