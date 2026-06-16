@@ -54,6 +54,10 @@
   </div>
 
   <form id="checkout-form">
+    <div class="hp-field" aria-hidden="true">
+      <label for="_hp">Leave blank</label>
+      <input id="_hp" name="_hp" type="text" tabindex="-1" autocomplete="off">
+    </div>
     <div class="card card-padded">
       <h2>Contact Information</h2>
       <div class="form-grid">
@@ -275,7 +279,7 @@
         appointmentDate: dateInput.value
       };
 
-      RHSCheckout.submitOrder(order)
+      RHSCheckout.submitOrder(order, form._hp.value.trim())
         .then(function (response) {
           if (!response.ok) {
             throw new Error(response.error || "Submission failed.");

@@ -126,8 +126,4 @@
   window.RHSReloadBookingRequests = loadBookingRequests;
 
   document.addEventListener("rhs-admin-ready", loadBookingRequests);
-
-  if (RHSAdmin.getToken() && RHSAdmin.getUser() && RHSAdmin.getUser().role === "admin") {
-    loadBookingRequests();
-  }
 })();

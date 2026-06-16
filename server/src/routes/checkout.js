@@ -20,6 +20,11 @@ router.post(
       return res.status(400).json({ ok: false, error: "Missing order payload." });
     }
 
+    const honeypot = String((req.body && req.body._hp) || order._hp || "").trim();
+    if (honeypot) {
+      return res.status(400).json({ ok: false, error: "Invalid submission." });
+    }
+
     const required = ["name", "address", "email", "phone", "slotId"];
     for (const field of required) {
       if (!order[field] || String(order[field]).trim() === "") {

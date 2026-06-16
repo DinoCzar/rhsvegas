@@ -5,6 +5,8 @@ async function ensureAdminUser() {
   const email = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD || "";
   const name = process.env.ADMIN_NAME || "Admin";
+  const isProduction = process.env.NODE_ENV === "production";
+  const allowPasswordSync = process.env.ADMIN_SYNC_PASSWORD === "true";
 
   if (!email || !password) {
     console.warn(
@@ -26,15 +28,31 @@ async function ensureAdminUser() {
 
   if (existing) {
     const passwordMatches = bcrypt.compareSync(password, existing.password_hash);
-    const needsUpdate = !passwordMatches || !existing.active || existing.role !== "admin";
+    const needsRoleFix = !existing.active || existing.role !== "admin";
 
-    if (needsUpdate) {
+    if (!passwordMatches && allowPasswordSync) {
       const hash = bcrypt.hashSync(password, 10);
       await db.run(
         "UPDATE users SET password_hash = ?, name = ?, role = 'admin', active = 1 WHERE id = ?",
         [hash, name, existing.id]
       );
-      console.log("Synced admin account from environment:", email);
+      console.log("Synced admin password from environment:", email);
+      return;
+    }
+
+    if (needsRoleFix) {
+      await db.run("UPDATE users SET name = ?, role = 'admin', active = 1 WHERE id = ?", [
+        name,
+        existing.id
+      ]);
+      console.log("Restored admin account role/active state:", email);
+      return;
+    }
+
+    if (!passwordMatches && isProduction) {
+      console.warn(
+        "ADMIN_PASSWORD does not match the stored admin hash. Set ADMIN_SYNC_PASSWORD=true to overwrite on startup."
+      );
     }
     return;
   }

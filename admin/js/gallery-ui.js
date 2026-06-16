@@ -303,7 +303,9 @@
     loginView.classList.remove("hidden");
   });
 
-  if (RHSAdmin.getToken() && RHSAdmin.getUser()) {
-    showApp();
-  }
+  RHSAdmin.restoreSession().then(function (user) {
+    if (user) {
+      showApp();
+    }
+  });
 })();

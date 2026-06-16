@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const db = require("../db");
 const config = require("../config");
 const { authRequired, adminRequired, JWT_ALGORITHMS } = require("../middleware/auth");
-const { loginLimiter } = require("../middleware/rate-limit");
+const { loginLimiter, authWriteLimiter } = require("../middleware/rate-limit");
 const { isValidEmail } = require("../utils");
 const { asyncHandler } = require("../async-handler");
 
@@ -71,8 +71,7 @@ router.post(
     } catch (err) {
       res.status(502).json({
         ok: false,
-        error: "Failed to send test email.",
-        detail: err.response || err.message
+        error: "Failed to send test email."
       });
     }
   })
@@ -82,6 +81,7 @@ router.post(
   "/users",
   authRequired,
   adminRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const { email, password, name, role } = req.body || {};
     if (!email || !password || !name) {
