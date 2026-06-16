@@ -52,8 +52,7 @@ body {
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.btn-primary,
-.btn-hero {
+.btn-primary {
   background: var(--color-primary);
   color: #fff;
   padding: 14px 28px;
@@ -61,11 +60,26 @@ body {
   box-shadow: var(--shadow-btn);
 }
 
-.btn-primary:hover,
-.btn-hero:hover {
+.btn-hero {
+  background: var(--color-lime);
+  color: var(--color-primary-dark);
+  padding: 14px 28px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 14px rgba(176, 207, 54, 0.35);
+}
+
+.btn-primary:hover {
   background: var(--color-primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(45, 74, 122, 0.32);
+  opacity: 1;
+}
+
+.btn-hero:hover {
+  background: var(--color-lime-dark);
+  color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(176, 207, 54, 0.4);
   opacity: 1;
 }
 
