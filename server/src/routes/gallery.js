@@ -2,11 +2,12 @@ const express = require("express");
 const db = require("../db");
 const { authRequired, adminRequired } = require("../middleware/auth");
 const { asyncHandler } = require("../async-handler");
+const { galleryImageLimiter, authWriteLimiter, publicReadLimiter } = require("../middleware/rate-limit");
 
 const router = express.Router();
 
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const { validateImageBuffer, ALLOWED_IMAGE_MIMES } = require("../utils/image-mime");
 
 function imageResponse(row, req) {
   return {
@@ -24,7 +25,7 @@ function parseUploadBody(body) {
   const mimeType = String((body && body.mimeType) || "").trim().toLowerCase();
   const dataBase64 = String((body && body.dataBase64) || "").trim();
 
-  if (!mimeType || ALLOWED_MIME_TYPES.indexOf(mimeType) === -1) {
+  if (!mimeType || ALLOWED_IMAGE_MIMES.indexOf(mimeType) === -1) {
     throw new Error("INVALID_MIME");
   }
   if (!dataBase64) {
@@ -39,11 +40,24 @@ function parseUploadBody(body) {
     throw new Error("IMAGE_TOO_LARGE");
   }
 
-  return { caption: caption, mimeType: mimeType, imageData: buffer.toString("base64") };
+  const validated = validateImageBuffer(buffer, mimeType);
+  if (!validated.ok) {
+    if (validated.error === "MIME_MISMATCH") {
+      throw new Error("MIME_MISMATCH");
+    }
+    throw new Error("INVALID_IMAGE");
+  }
+
+  return {
+    caption: caption,
+    mimeType: validated.mimeType,
+    imageData: buffer.toString("base64")
+  };
 }
 
 router.get(
   "/",
+  publicReadLimiter,
   asyncHandler(async function (req, res) {
     const rows = await db.all(
       "SELECT id, caption, mime_type, sort_order, created_at FROM gallery_images ORDER BY sort_order ASC, id ASC"
@@ -76,6 +90,7 @@ router.get(
 
 router.get(
   "/:id/image",
+  galleryImageLimiter,
   asyncHandler(async function (req, res) {
     const row = await db.get(
       "SELECT id, mime_type, image_data FROM gallery_images WHERE id = ?",
@@ -88,6 +103,7 @@ router.get(
     const buffer = Buffer.from(row.image_data, "base64");
     res.set("Cache-Control", "public, max-age=3600");
     res.set("Cross-Origin-Resource-Policy", "cross-origin");
+    res.set("X-Content-Type-Options", "nosniff");
     res.type(row.mime_type);
     res.send(buffer);
   })
@@ -97,6 +113,7 @@ router.post(
   "/",
   authRequired,
   adminRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     let upload;
     try {
@@ -110,6 +127,9 @@ router.post(
       }
       if (err.message === "IMAGE_TOO_LARGE") {
         return res.status(400).json({ ok: false, error: "Image must be 3 MB or smaller." });
+      }
+      if (err.message === "MIME_MISMATCH") {
+        return res.status(400).json({ ok: false, error: "Image type does not match file contents." });
       }
       throw err;
     }
@@ -142,6 +162,7 @@ router.put(
   "/reorder",
   authRequired,
   adminRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const order = (req.body && req.body.order) || [];
     if (!Array.isArray(order) || !order.length) {
@@ -171,6 +192,7 @@ router.put(
   "/:id",
   authRequired,
   adminRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const imageId = Number(req.params.id);
     const caption = String((req.body && req.body.caption) || "").trim();
@@ -197,6 +219,7 @@ router.delete(
   "/:id",
   authRequired,
   adminRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const imageId = Number(req.params.id);
     const result = await db.run("DELETE FROM gallery_images WHERE id = ?", [imageId]);

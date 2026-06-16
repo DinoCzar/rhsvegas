@@ -81,6 +81,21 @@
       });
     },
 
+    restoreSession: function () {
+      if (!getToken()) {
+        return Promise.resolve(null);
+      }
+      return api("/auth/me")
+        .then(function (data) {
+          setSession(getToken(), data.user);
+          return data.user;
+        })
+        .catch(function () {
+          clearSession();
+          return null;
+        });
+    },
+
     fetchSlots: function (from, to, userId) {
       var q = "?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
       if (userId) q += "&userId=" + encodeURIComponent(userId);

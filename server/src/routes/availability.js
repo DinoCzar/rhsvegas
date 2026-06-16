@@ -8,6 +8,7 @@ const {
 } = require("../utils");
 const schedule = require("../services/availability-schedule");
 const { asyncHandler } = require("../async-handler");
+const { publicReadLimiter, authWriteLimiter } = require("../middleware/rate-limit");
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ function slotToResponse(row) {
 
 router.get(
   "/dates",
+  publicReadLimiter,
   asyncHandler(async function (req, res) {
     const horizon = schedule.scheduleHorizon();
     const from = req.query.from;
@@ -47,6 +49,7 @@ router.get(
 
 router.get(
   "/",
+  publicReadLimiter,
   asyncHandler(async function (req, res) {
     const date = req.query.date;
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -143,6 +146,7 @@ router.get(
 router.put(
   "/schedule/weekly",
   authRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     try {
       const userId = await schedule.resolveTargetUserId(req, req.body?.userId);
@@ -192,6 +196,7 @@ router.get(
 router.put(
   "/schedule/date/:date",
   authRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     try {
       const userId = await schedule.resolveTargetUserId(req, req.body?.userId);
@@ -219,6 +224,7 @@ router.put(
 router.delete(
   "/schedule/date/:date",
   authRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     try {
       const userId = await schedule.resolveTargetUserId(req, req.query.userId);
@@ -245,6 +251,7 @@ router.delete(
 router.post(
   "/",
   authRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const { date, startTime, endTime, userId } = req.body || {};
 
@@ -313,6 +320,7 @@ router.post(
 router.delete(
   "/:id",
   authRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const slotId = Number(req.params.id);
     const slot = await db.get(

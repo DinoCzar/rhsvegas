@@ -130,6 +130,14 @@
   gap: 16px;
 }
 
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .form-grid label {
   display: block;
   font-size: 0.8125rem;

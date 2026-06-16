@@ -61,8 +61,8 @@
       return apiGet("/availability?date=" + encodeURIComponent(date));
     },
 
-    submitOrder: function (order) {
-      return apiPost("/checkout", { order: order });
+    submitOrder: function (order, honeypot) {
+      return apiPost("/checkout", { order: order, _hp: honeypot || "" });
     }
   };
 })();

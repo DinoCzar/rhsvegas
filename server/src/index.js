@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const helmet = require("helmet");
 const fs = require("fs");
 const path = require("path");
 const config = require("./config");
@@ -8,6 +7,7 @@ const { initDb, getDatabaseLabel } = require("./db");
 const { ensureAdminUser } = require("./bootstrap-admin");
 const { ensureAvailabilitySynced } = require("./bootstrap-availability");
 const { getEmailStatus, verifySmtpConnection } = require("./services/email");
+const { applySecurityMiddleware } = require("./middleware/security");
 const authRoutes = require("./routes/auth");
 const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
@@ -18,12 +18,7 @@ const app = express();
 
 app.set("trust proxy", 1);
 
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-  })
-);
+applySecurityMiddleware(app);
 
 app.use(
   cors({

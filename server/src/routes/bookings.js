@@ -5,6 +5,7 @@ const { BOOKING_STATUS } = require("../constants/bookings");
 const { formatAppointmentTime, formatDateTimeLong } = require("../utils");
 const { sendBookingConfirmationEmail } = require("../services/email");
 const { asyncHandler } = require("../async-handler");
+const { authWriteLimiter } = require("../middleware/rate-limit");
 
 const router = express.Router();
 
@@ -87,6 +88,7 @@ router.post(
   "/:id/approve",
   authRequired,
   adminRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const bookingId = Number(req.params.id);
     const booking = await getBookingById(bookingId);
@@ -125,6 +127,7 @@ router.post(
   "/:id/deny",
   authRequired,
   adminRequired,
+  authWriteLimiter,
   asyncHandler(async function (req, res) {
     const bookingId = Number(req.params.id);
     const booking = await getBookingById(bookingId);

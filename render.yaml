@@ -24,6 +24,8 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+      - key: ADMIN_SYNC_PASSWORD
+        value: "false"
       - key: OWNER_EMAIL
         sync: false
       - key: RESEND_API_KEY
@@ -56,6 +58,21 @@ services:
       - path: /*
         name: Cache-Control
         value: no-cache, must-revalidate
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://rhsvegas-api-c5y0.onrender.com https://api.rhsvegas.com http://localhost:3001; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
     routes:
       - type: rewrite
         source: /cart
