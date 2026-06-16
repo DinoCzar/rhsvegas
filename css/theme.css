@@ -4,6 +4,8 @@
   --color-primary: #2d4a7a;
   --color-primary-dark: #1e3558;
   --color-accent: #4a9b6e;
+  --color-lime: #c5e84a;
+  --color-lime-dark: #b0cf36;
   --color-text: #1f2937;
   --color-muted: #5c6570;
   --color-border: #d8dee6;
@@ -103,8 +105,8 @@ body {
 }
 
 .add-btn {
-  background: var(--color-accent);
-  color: #fff;
+  background: var(--color-lime);
+  color: var(--color-primary-dark);
   border: none;
   padding: 9px 16px;
   border-radius: var(--radius-sm);
@@ -113,12 +115,12 @@ body {
   font-size: 0.8125rem;
   font-weight: 600;
   justify-self: end;
-  box-shadow: 0 2px 8px rgba(74, 155, 110, 0.3);
+  box-shadow: 0 2px 8px rgba(176, 207, 54, 0.35);
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .add-btn:hover {
-  background: #3d8559;
+  background: var(--color-lime-dark);
   transform: translateY(-1px);
   opacity: 1;
 }
