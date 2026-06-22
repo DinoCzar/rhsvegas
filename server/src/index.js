@@ -6,6 +6,8 @@ const config = require("./config");
 const { initDb, getDatabaseLabel } = require("./db");
 const { ensureAdminUser } = require("./bootstrap-admin");
 const { ensureAvailabilitySynced } = require("./bootstrap-availability");
+const { ensureServicesSeeded } = require("./bootstrap-services");
+const { refreshCatalog } = require("./services/catalog-service");
 const { getEmailStatus, verifySmtpConnection } = require("./services/email");
 const { applySecurityMiddleware } = require("./middleware/security");
 const authRoutes = require("./routes/auth");
@@ -13,6 +15,7 @@ const availabilityRoutes = require("./routes/availability");
 const checkoutRoutes = require("./routes/checkout");
 const bookingsRoutes = require("./routes/bookings");
 const galleryRoutes = require("./routes/gallery");
+const servicesRoutes = require("./routes/services");
 
 const app = express();
 
@@ -77,6 +80,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/availability", availabilityRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/bookings", bookingsRoutes);
+app.use("/api/services", servicesRoutes);
 
 var adminCandidates = [
   path.join(__dirname, "../../admin"),
@@ -115,6 +119,8 @@ async function start() {
     console.log("Database:", getDatabaseLabel());
 
     await ensureAdminUser();
+    await ensureServicesSeeded();
+    await refreshCatalog();
     await ensureAvailabilitySynced();
 
     verifySmtpConnection().then(function (result) {

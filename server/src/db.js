@@ -154,6 +154,22 @@ var SCHEMA = `
   );
 
   CREATE INDEX IF NOT EXISTS idx_gallery_sort ON gallery_images(sort_order, id);
+
+  CREATE TABLE IF NOT EXISTS services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    section TEXT NOT NULL,
+    category TEXT NOT NULL,
+    name TEXT NOT NULL,
+    cart_name TEXT,
+    price REAL NOT NULL DEFAULT 0,
+    price_label TEXT,
+    add_to_cart INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_services_section ON services(section, category, sort_order);
 `;
 
 async function runOptionalMigration(sql) {

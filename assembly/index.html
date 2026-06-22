@@ -53,94 +53,8 @@
 </div>
 <p class="service-search-no-results" hidden>No matching services found.</p>
 
-<div class="accordion-container">
-
-  <!-- DRESSERS -->
-  <div class="category">
-    <button class="dropdown-btn" onclick="toggleCategory(this)">
-      <span>Dressers and Wardrobes</span>
-      <span class="arrow">▼</span>
-    </button>
-    <div class="content">
-      <div class="item">
-        <span>Nightstand (1-2 drawer)</span>
-        <span class="price">$45</span>
-        <button class="add-btn" onclick="addToCart('Nightstand (1-2 drawer)', 45)">Add</button>
-      </div>
-      <div class="item">
-        <span>Dresser (3-4 drawers)</span>
-        <span class="price">$90</span>
-        <button class="add-btn" onclick="addToCart('Dresser (3-4 drawers)', 90)">Add</button>
-      </div>
-      <div class="item">
-        <span>Dresser (5-6 drawers)</span>
-        <span class="price">$120</span>
-        <button class="add-btn" onclick="addToCart('Dresser (5-6 drawers)', 120)">Add</button>
-      </div>
-      <div class="item">
-        <span>Dresser (7-8 drawers)</span>
-        <span class="price">$150</span>
-        <button class="add-btn" onclick="addToCart('Dresser (7-8 drawers)', 150)">Add</button>
-      </div>
-      <div class="item">
-        <span>Wardrobe Medium</span>
-        <span class="price">$180</span>
-        <button class="add-btn" onclick="addToCart('Wardrobe Medium', 180)">Add</button>
-      </div>
-      <div class="item">
-        <span>Wardrobe Large</span>
-        <span class="price">$270</span>
-        <button class="add-btn" onclick="addToCart('Wardrobe Large', 270)">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BED FRAMES -->
-  <div class="category">
-    <button class="dropdown-btn" onclick="toggleCategory(this)">
-      <span>Bed Frames</span>
-      <span class="arrow">▼</span>
-    </button>
-    <div class="content">
-      <div class="item">
-        <span>Headboard</span>
-        <span class="price">$45</span>
-        <button class="add-btn" onclick="addToCart('Headboard', 45)">Add</button>
-      </div>
-      <div class="item">
-        <span>Bed Frame</span>
-        <span class="price">$90</span>
-        <button class="add-btn" onclick="addToCart('Bed Frame', 90)">Add</button>
-      </div>
-      <div class="item">
-        <span>Bunk Bed</span>
-        <span class="price">$225</span>
-        <button class="add-btn" onclick="addToCart('Bunk Bed', 225)">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TV STANDS -->
-  <div class="category">
-    <button class="dropdown-btn" onclick="toggleCategory(this)">
-      <span>TV Stands / Entertainment</span>
-      <span class="arrow">▼</span>
-    </button>
-    <div class="content">
-      <div class="item">
-        <span>TV Stand Medium</span>
-        <span class="price">$135</span>
-        <button class="add-btn" onclick="addToCart('TV Stand Medium', 135)">Add</button>
-      </div>
-      <div class="item">
-        <span>TV Stand Large</span>
-        <span class="price">$225</span>
-        <button class="add-btn" onclick="addToCart('TV Stand Large', 225)">Add</button>
-      </div>
-    </div>
-  </div>
-
-</div>
+<div class="accordion-container" id="services-accordion" data-section="Assembly"></div>
+<p class="service-search-no-results" id="services-load-error" hidden>Could not load services. Please refresh the page.</p>
 
 <footer class="site-footer">
   <p>Not a state licensed contractor. All services performed in compliance with NRS 624.031.</p>
@@ -148,6 +62,7 @@
 
 <script src="/js/config.js"></script>
 <script src="/js/cart.js"></script>
+<script src="/js/services-page.js"></script>
 <script src="/js/service-search.js"></script>
 <script src="/js/nav.js"></script>
 

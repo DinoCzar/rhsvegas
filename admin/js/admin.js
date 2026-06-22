@@ -201,6 +201,28 @@
       return api("/gallery/" + encodeURIComponent(id), { method: "DELETE" });
     },
 
+    listServicesManage: function () {
+      return api("/services/manage/list");
+    },
+
+    createService: function (payload) {
+      return api("/services", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+    },
+
+    updateService: function (id, payload) {
+      return api("/services/" + encodeURIComponent(id), {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+    },
+
+    deleteService: function (id) {
+      return api("/services/" + encodeURIComponent(id), { method: "DELETE" });
+    },
+
     galleryImageUrl: function (imagePath) {
       var base = getApiBase();
       if (imagePath.indexOf("/api/") === 0) {
