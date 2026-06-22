@@ -106,11 +106,22 @@
 
         var row = document.createElement("div");
         row.className = "cart-item";
+        row.setAttribute("data-index", String(index));
         row.innerHTML =
           '<div class="cart-item-name">' + nameHtml + "</div>" +
-          '<div class="cart-item-qty">Qty ' + qty + "</div>" +
+          '<div class="cart-qty-control">' +
+          '<button type="button" class="cart-qty-btn" data-qty-change="-1" aria-label="Decrease quantity for ' +
+          escapeHtml(item.name) +
+          '">−</button>' +
+          '<span class="cart-qty-value" aria-live="polite">' +
+          qty +
+          "</span>" +
+          '<button type="button" class="cart-qty-btn" data-qty-change="1" aria-label="Increase quantity for ' +
+          escapeHtml(item.name) +
+          '">+</button>' +
+          "</div>" +
           '<div class="cart-item-price">' + priceDisplay + "</div>" +
-          '<button class="remove-btn" type="button" data-index="' + index + '">Remove</button>';
+          '<button class="remove-btn" type="button" data-remove>Remove</button>';
         itemsEl.appendChild(row);
       });
 
@@ -127,9 +138,33 @@
     }
 
     itemsEl.addEventListener("click", function (event) {
-      var button = event.target.closest("[data-index]");
-      if (!button) return;
-      RHSCart.removeItem(Number(button.getAttribute("data-index")));
+      var qtyBtn = event.target.closest("[data-qty-change]");
+      if (qtyBtn) {
+        var row = qtyBtn.closest(".cart-item");
+        if (!row) {
+          return;
+        }
+        var index = Number(row.getAttribute("data-index"));
+        var items = RHSCart.getItems();
+        if (!items[index]) {
+          return;
+        }
+        var delta = Number(qtyBtn.getAttribute("data-qty-change"));
+        var nextQty = (items[index].quantity || 1) + delta;
+        RHSCart.setItemQuantity(index, nextQty);
+        renderCart();
+        return;
+      }
+
+      var removeBtn = event.target.closest("[data-remove]");
+      if (!removeBtn) {
+        return;
+      }
+      var removeRow = removeBtn.closest(".cart-item");
+      if (!removeRow) {
+        return;
+      }
+      RHSCart.removeItem(Number(removeRow.getAttribute("data-index")));
       renderCart();
     });
 
