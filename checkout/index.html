@@ -144,14 +144,10 @@
       if (qty > 1) {
         name += " × " + qty;
       }
-      var lineTotal = (Number(item.price) || 0) * qty;
-      var price =
-        qty > 1
-          ? escapeHtml(RHSCart.formatPrice(lineTotal))
-          : escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price));
+      var price = escapeHtml(RHSCart.formatLinePrice(item));
       return '<div class="order-line"><span>' + name + '</span><span>' + price + "</span></div>";
     }).join("") + '<div class="order-line"><strong>Estimated total</strong><strong>' +
-      escapeHtml(RHSCart.formatPrice(RHSCart.getTotal())) + "</strong></div>";
+      escapeHtml(RHSCart.formatEstimatedTotal()) + "</strong></div>";
 
     function escapeHtml(value) {
       return String(value)
@@ -285,7 +281,8 @@
         phone: form.phone.value.trim(),
         address: form.address.value.trim(),
         items: RHSCart.getCheckoutItems(),
-        estimatedTotal: RHSCart.getTotal(),
+        estimatedTotal: RHSCart.getFixedTotal(),
+        hasHourlyRateItems: RHSCart.hasHourlyRateItems(),
         slotId: selectedSlot.id,
         appointmentStart: selectedSlot.start,
         appointmentDate: dateInput.value

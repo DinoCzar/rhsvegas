@@ -7,6 +7,39 @@ function normalizeKey(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function isHourlyRateEntry(entry) {
+  if (!entry) {
+    return false;
+  }
+  if (normalizeKey(entry.name) === normalizeKey("Other Tasks Not Listed")) {
+    return true;
+  }
+  return String(entry.priceLabel || "").toLowerCase().indexOf("/hr") !== -1;
+}
+
+function isHourlyRateItem(item) {
+  if (!item) {
+    return false;
+  }
+  if (normalizeKey(item.name) === normalizeKey("Other Tasks Not Listed")) {
+    return true;
+  }
+  return String(item.priceLabel || "").toLowerCase().indexOf("/hr") !== -1;
+}
+
+function formatEstimatedTotalLabel(items, fixedTotal) {
+  var hasHourly = items.some(isHourlyRateItem);
+  var fixed = Number(fixedTotal) || 0;
+
+  if (hasHourly && fixed > 0) {
+    return "$" + fixed.toFixed(0) + " + TBD";
+  }
+  if (hasHourly) {
+    return "TBD";
+  }
+  return "$" + fixed.toFixed(0);
+}
+
 function formatPrice(entry) {
   if (entry.priceLabel) {
     return entry.priceLabel;
@@ -110,7 +143,9 @@ function validateOrderItems(items) {
       throw new Error("INVALID_PRICE");
     }
 
-    estimatedTotal += serverPrice;
+    if (!isHourlyRateEntry(entry)) {
+      estimatedTotal += serverPrice;
+    }
     var normalizedItem = {
       name: entry.cartName || entry.name,
       price: serverPrice,
@@ -131,5 +166,8 @@ module.exports = {
   getLookupMap,
   validateOrderItems,
   rowToEntry,
-  formatPrice
+  formatPrice,
+  isHourlyRateEntry,
+  isHourlyRateItem,
+  formatEstimatedTotalLabel
 };

@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 const config = require("../config");
 const { formatDateTimeLong, businessNowIso } = require("../utils");
+const catalog = require("./catalog-service");
 
 let transporter = null;
 
@@ -198,7 +199,7 @@ async function sendNewBookingRequestEmail(booking, items, employeeName) {
     "SERVICES",
     lines,
     "",
-    "Estimated total: $" + Number(booking.estimated_total).toFixed(0),
+    "Estimated total: " + catalog.formatEstimatedTotalLabel(items, booking.estimated_total),
     "Note: No payment collected online.",
     "",
     "REQUESTED APPOINTMENT",

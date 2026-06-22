@@ -91,6 +91,66 @@
     return String(name || "").trim().toLowerCase() === OTHER_TASKS_NAME.toLowerCase();
   }
 
+  function isHourlyRateItem(item) {
+    if (isOtherTasksItem(item && item.name)) {
+      return true;
+    }
+    return String((item && item.priceLabel) || "").toLowerCase().indexOf("/hr") !== -1;
+  }
+
+  function getFixedTotal(items) {
+    items = items || readCart();
+    return items.reduce(function (sum, item) {
+      if (isHourlyRateItem(item)) {
+        return sum;
+      }
+      return sum + (Number(item.price) || 0) * (item.quantity || 1);
+    }, 0);
+  }
+
+  function hasHourlyRateItems(items) {
+    items = items || readCart();
+    return items.some(isHourlyRateItem);
+  }
+
+  function formatEstimatedTotal(items) {
+    items = items || readCart();
+    var fixedTotal = getFixedTotal(items);
+    var hasHourly = hasHourlyRateItems(items);
+
+    if (hasHourly && fixedTotal > 0) {
+      return formatPrice(fixedTotal) + " + TBD";
+    }
+    if (hasHourly) {
+      return "TBD";
+    }
+    if (fixedTotal === 0 && items.length) {
+      var onlyCustom = items.every(function (item) {
+        return (Number(item.price) || 0) === 0;
+      });
+      if (onlyCustom) {
+        return "TBD";
+      }
+    }
+    return formatPrice(fixedTotal);
+  }
+
+  function formatLinePrice(item) {
+    var qty = item.quantity || 1;
+    var label = item.priceLabel || formatPrice(item.price);
+    if (isHourlyRateItem(item)) {
+      if (qty > 1) {
+        return label + " × " + qty + " = TBD";
+      }
+      return label;
+    }
+    var lineTotal = (Number(item.price) || 0) * qty;
+    if (qty > 1) {
+      return label + " × " + qty + " = " + formatPrice(lineTotal);
+    }
+    return label;
+  }
+
   function itemKey(name, price, taskDescription) {
     var base = String(name).trim().toLowerCase() + "|" + String(Number(price) || 0);
     if (isOtherTasksItem(name)) {
@@ -364,10 +424,18 @@
     },
 
     getTotal: function () {
-      return readCart().reduce(function (sum, item) {
-        return sum + (Number(item.price) || 0) * (item.quantity || 1);
-      }, 0);
+      return getFixedTotal();
     },
+
+    getFixedTotal: getFixedTotal,
+
+    hasHourlyRateItems: hasHourlyRateItems,
+
+    formatEstimatedTotal: formatEstimatedTotal,
+
+    formatLinePrice: formatLinePrice,
+
+    isHourlyRateItem: isHourlyRateItem,
 
     formatPrice: formatPrice,
 
