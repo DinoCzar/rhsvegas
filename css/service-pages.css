@@ -170,6 +170,15 @@ body {
   border-bottom: none;
 }
 
+.service-flat-list {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
 .item > span:first-child {
   justify-self: start;
   font-weight: 500;
