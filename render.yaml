@@ -96,6 +96,9 @@ services:
         source: /other-services
         destination: /other-services/index.html
       - type: rewrite
+        source: /service-not-found
+        destination: /service-not-found/index.html
+      - type: rewrite
         source: /gallery
         destination: /gallery/index.html
       - type: rewrite

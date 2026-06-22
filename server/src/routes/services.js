@@ -75,6 +75,7 @@ router.get(
   publicReadLimiter,
   asyncHandler(async function (req, res) {
     const section = String(req.query.section || "").trim();
+    const category = String(req.query.category || "").trim();
     let sql = `
       SELECT id, section, category, name, cart_name, price, price_label, add_to_cart, sort_order, active
       FROM services
@@ -85,6 +86,11 @@ router.get(
     if (section) {
       sql += " AND section = ?";
       params.push(section);
+    }
+
+    if (category) {
+      sql += " AND category = ?";
+      params.push(category);
     }
 
     sql += " ORDER BY section ASC, category ASC, sort_order ASC, id ASC";

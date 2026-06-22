@@ -32,6 +32,7 @@
     assemblyUrl: "/assembly",
     installationUrl: "/installation",
     otherServicesUrl: "/other-services",
+    serviceNotFoundUrl: "/service-not-found",
 
     businessName: "Ryan's Home Solutions",
     timezoneLabel: "Pacific Time (Las Vegas)"

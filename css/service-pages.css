@@ -44,6 +44,24 @@ body {
   color: #fff;
 }
 
+.service-page-nav a.service-page-nav-cta {
+  background: var(--color-lime);
+  border-color: var(--color-lime);
+  color: var(--color-primary-dark);
+  box-shadow: 0 2px 8px rgba(176, 207, 54, 0.35);
+}
+
+.service-page-nav a.service-page-nav-cta:hover {
+  background: var(--color-lime-dark);
+  border-color: var(--color-lime-dark);
+}
+
+.service-page-nav a.service-page-nav-cta[aria-current="page"] {
+  background: var(--color-lime);
+  border-color: var(--color-primary-dark);
+  color: var(--color-primary-dark);
+}
+
 .service-section-heading {
   font-family: var(--font-heading);
   font-size: 1.125rem;
