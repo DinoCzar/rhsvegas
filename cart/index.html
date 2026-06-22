@@ -95,11 +95,23 @@
       checkoutBtn.style.opacity = "";
 
       items.forEach(function (item, index) {
+        var qty = item.quantity || 1;
+        var lineTotal = (Number(item.price) || 0) * qty;
+        var priceDisplay =
+          qty > 1
+            ? escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price)) +
+              " × " +
+              qty +
+              " = " +
+              escapeHtml(RHSCart.formatPrice(lineTotal))
+            : escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price));
+
         var row = document.createElement("div");
         row.className = "cart-item";
         row.innerHTML =
           '<div class="cart-item-name">' + escapeHtml(item.name) + "</div>" +
-          '<div class="cart-item-price">' + escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price)) + "</div>" +
+          '<div class="cart-item-qty">Qty ' + qty + "</div>" +
+          '<div class="cart-item-price">' + priceDisplay + "</div>" +
           '<button class="remove-btn" type="button" data-index="' + index + '">Remove</button>';
         itemsEl.appendChild(row);
       });
