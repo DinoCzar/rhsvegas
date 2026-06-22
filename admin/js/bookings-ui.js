@@ -39,6 +39,157 @@
     return formatMoney(fixed);
   }
 
+  function formatServiceLines(items) {
+    return (items || [])
+      .map(function (item) {
+        var line = item.name + " — " + (item.priceLabel || formatMoney(item.price));
+        if (item.taskDescription) {
+          line += " (" + item.taskDescription + ")";
+        }
+        return line;
+      })
+      .join("\n");
+  }
+
+  function getFirstName(fullName) {
+    var parts = String(fullName || "").trim().split(/\s+/);
+    return parts[0] || "";
+  }
+
+  function formatBookingDateLine(iso) {
+    var match = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})T/);
+    if (!match) {
+      return "";
+    }
+    var y = Number(match[1]);
+    var mo = Number(match[2]);
+    var d = Number(match[3]);
+    var weekday = new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+      timeZone: "UTC"
+    }).format(Date.UTC(y, mo - 1, d, 12, 0, 0));
+    var datePart = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC"
+    }).format(Date.UTC(y, mo - 1, d, 12, 0, 0));
+    return weekday + ", " + datePart;
+  }
+
+  function buildApprovalCopyText(booking) {
+    return [
+      getFirstName(booking.customerName),
+      formatBookingDateLine(booking.appointmentStart),
+      "Arrival: " + (booking.appointmentTime || ""),
+      "Client Total: " + formatEstimatedTotal(booking.items, booking.estimatedTotal),
+      "Est hrs:",
+      "",
+      booking.customerAddress || "",
+      "",
+      formatServiceLines(booking.items)
+    ].join("\n");
+  }
+
+  var approvalModal = null;
+
+  function ensureApprovalModal() {
+    if (approvalModal) {
+      return approvalModal;
+    }
+
+    approvalModal = document.createElement("div");
+    approvalModal.className = "admin-approval-modal";
+    approvalModal.hidden = true;
+    approvalModal.setAttribute("role", "dialog");
+    approvalModal.setAttribute("aria-modal", "true");
+    approvalModal.setAttribute("aria-labelledby", "admin-approval-modal-title");
+    approvalModal.innerHTML =
+      '<div class="admin-approval-modal-backdrop" data-approval-modal-close></div>' +
+      '<div class="admin-approval-modal-card">' +
+      '<h2 id="admin-approval-modal-title">Booking confirmed</h2>' +
+      "<p>Copy this summary for your records or scheduling tools.</p>" +
+      '<textarea id="admin-approval-copy-text" class="admin-approval-copy-text" readonly rows="12"></textarea>' +
+      '<div class="admin-approval-modal-actions">' +
+      '<button type="button" class="btn-primary" id="admin-approval-copy-btn">Copy to clipboard</button>' +
+      '<button type="button" class="btn-secondary" id="admin-approval-close-btn">Close</button>' +
+      "</div>" +
+      '<p class="status" id="admin-approval-copy-status" hidden></p>' +
+      "</div>";
+
+    document.body.appendChild(approvalModal);
+
+    approvalModal.querySelector("#admin-approval-close-btn").addEventListener("click", closeApprovalModal);
+    approvalModal.querySelector("[data-approval-modal-close]").addEventListener("click", closeApprovalModal);
+    approvalModal.querySelector("#admin-approval-copy-btn").addEventListener("click", function () {
+      var textarea = approvalModal.querySelector("#admin-approval-copy-text");
+      var statusEl = approvalModal.querySelector("#admin-approval-copy-status");
+      var text = textarea.value;
+
+      function showCopied() {
+        statusEl.textContent = "Copied to clipboard.";
+        statusEl.className = "status success";
+        statusEl.hidden = false;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(showCopied).catch(function () {
+          textarea.focus();
+          textarea.select();
+          try {
+            document.execCommand("copy");
+            showCopied();
+          } catch (err) {
+            statusEl.textContent = "Select the text and copy manually.";
+            statusEl.className = "status error";
+            statusEl.hidden = false;
+          }
+        });
+        return;
+      }
+
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand("copy");
+        showCopied();
+      } catch (err) {
+        statusEl.textContent = "Select the text and copy manually.";
+        statusEl.className = "status error";
+        statusEl.hidden = false;
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && approvalModal && !approvalModal.hidden) {
+        closeApprovalModal();
+      }
+    });
+
+    return approvalModal;
+  }
+
+  function showApprovalCopyModal(booking) {
+    var modal = ensureApprovalModal();
+    var textarea = modal.querySelector("#admin-approval-copy-text");
+    var statusEl = modal.querySelector("#admin-approval-copy-status");
+    textarea.value = buildApprovalCopyText(booking);
+    statusEl.hidden = true;
+    statusEl.textContent = "";
+    modal.hidden = false;
+    document.body.classList.add("admin-approval-modal-open");
+    textarea.focus();
+    textarea.select();
+  }
+
+  function closeApprovalModal() {
+    if (!approvalModal) {
+      return;
+    }
+    approvalModal.hidden = true;
+    document.body.classList.remove("admin-approval-modal-open");
+  }
+
   function renderItems(items) {
     if (!items || !items.length) {
       return "<p class=\"slot-meta\">No services listed.</p>";
@@ -110,7 +261,10 @@
       var approveId = approveBtn.getAttribute("data-approve");
       statusEl.textContent = "Approving…";
       RHSAdmin.approveBooking(approveId)
-        .then(function () {
+        .then(function (res) {
+          if (res && res.booking) {
+            showApprovalCopyModal(res.booking);
+          }
           loadBookingRequests();
           if (window.RHSReloadAvailability) {
             window.RHSReloadAvailability();

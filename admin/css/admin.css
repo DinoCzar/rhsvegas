@@ -344,6 +344,83 @@ select {
   font-size: 13px;
 }
 
+body.admin-approval-modal-open {
+  overflow: hidden;
+}
+
+.admin-approval-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.admin-approval-modal[hidden] {
+  display: none;
+}
+
+.admin-approval-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 53, 88, 0.55);
+}
+
+.admin-approval-modal-card {
+  position: relative;
+  width: min(100%, 560px);
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 16px 48px rgba(30, 53, 88, 0.22);
+}
+
+.admin-approval-modal-card h2 {
+  margin: 0 0 8px;
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: 1.25rem;
+  color: var(--rhs-blue);
+}
+
+.admin-approval-modal-card p {
+  margin: 0 0 16px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.admin-approval-copy-text {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 240px;
+  padding: 12px 14px;
+  border: 1px solid #d8dee8;
+  border-radius: 6px;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  resize: vertical;
+  background: #fafbfc;
+  color: #222;
+}
+
+.admin-approval-copy-text:focus {
+  outline: none;
+  border-color: var(--rhs-blue);
+}
+
+.admin-approval-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-approval-modal-card .status {
+  margin-top: 12px;
+}
+
 @media (max-width: 700px) {
   .booking-card {
     flex-direction: column;
