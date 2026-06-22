@@ -55,6 +55,12 @@ router.post(
           error: "Cart prices do not match our service list. Please refresh and try again."
         });
       }
+      if (err.message === "INVALID_TASK_DESCRIPTION") {
+        return res.status(400).json({
+          ok: false,
+          error: "Please add a task description for Other Tasks Not Listed."
+        });
+      }
       return res.status(400).json({ ok: false, error: "Invalid cart items." });
     }
 

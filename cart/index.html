@@ -106,10 +106,16 @@
               escapeHtml(RHSCart.formatPrice(lineTotal))
             : escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price));
 
+        var nameHtml = escapeHtml(item.name);
+        if (item.taskDescription) {
+          nameHtml +=
+            '<div class="cart-item-note">' + escapeHtml(item.taskDescription) + "</div>";
+        }
+
         var row = document.createElement("div");
         row.className = "cart-item";
         row.innerHTML =
-          '<div class="cart-item-name">' + escapeHtml(item.name) + "</div>" +
+          '<div class="cart-item-name">' + nameHtml + "</div>" +
           '<div class="cart-item-qty">Qty ' + qty + "</div>" +
           '<div class="cart-item-price">' + priceDisplay + "</div>" +
           '<button class="remove-btn" type="button" data-index="' + index + '">Remove</button>';

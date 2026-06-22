@@ -70,7 +70,11 @@ function formatItemsList(items) {
   return items
     .map(function (item, i) {
       var label = item.priceLabel || "$" + (item.price || 0);
-      return i + 1 + ". " + item.name + " — " + label;
+      var line = i + 1 + ". " + item.name + " — " + label;
+      if (item.taskDescription) {
+        line += "\n   Task: " + item.taskDescription;
+      }
+      return line;
     })
     .join("\n");
 }

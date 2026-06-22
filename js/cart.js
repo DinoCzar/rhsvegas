@@ -2,6 +2,10 @@
   var LEGACY_CART_KEY = "rhs_cart";
   var COOKIE_NAME = "rhs_cart_token";
   var COOKIE_MAX_AGE_DAYS = 30;
+  var OTHER_TASKS_NAME = "Other Tasks Not Listed";
+  var MAX_TASK_DESCRIPTION = 500;
+  var pendingOtherTask = null;
+  var taskModal = null;
 
   function getCookie(name) {
     var match = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "=([^;]*)"));
@@ -71,22 +75,34 @@
   }
 
   function normalizeItem(item) {
-    return {
+    var normalized = {
       name: item.name,
       price: Number(item.price) || 0,
       priceLabel: item.priceLabel || formatPrice(item.price),
       quantity: Math.max(1, Number(item.quantity) || 1)
     };
+    if (isOtherTasksItem(item.name) && item.taskDescription) {
+      normalized.taskDescription = String(item.taskDescription).trim();
+    }
+    return normalized;
   }
 
-  function itemKey(name, price) {
-    return String(name).trim().toLowerCase() + "|" + String(Number(price) || 0);
+  function isOtherTasksItem(name) {
+    return String(name || "").trim().toLowerCase() === OTHER_TASKS_NAME.toLowerCase();
   }
 
-  function findItemIndex(items, name, price) {
-    var key = itemKey(name, price);
+  function itemKey(name, price, taskDescription) {
+    var base = String(name).trim().toLowerCase() + "|" + String(Number(price) || 0);
+    if (isOtherTasksItem(name)) {
+      return base + "|" + String(taskDescription || "").trim().toLowerCase();
+    }
+    return base;
+  }
+
+  function findItemIndex(items, name, price, taskDescription) {
+    var key = itemKey(name, price, taskDescription);
     for (var i = 0; i < items.length; i += 1) {
-      if (itemKey(items[i].name, items[i].price) === key) {
+      if (itemKey(items[i].name, items[i].price, items[i].taskDescription) === key) {
         return i;
       }
     }
@@ -101,7 +117,8 @@
         expanded.push({
           name: item.name,
           price: item.price,
-          priceLabel: item.priceLabel
+          priceLabel: item.priceLabel,
+          taskDescription: item.taskDescription
         });
       }
     });
@@ -168,6 +185,104 @@
     }, 3500);
   }
 
+  function ensureTaskModal() {
+    if (taskModal) {
+      return taskModal;
+    }
+
+    taskModal = document.createElement("div");
+    taskModal.className = "cart-task-modal";
+    taskModal.hidden = true;
+    taskModal.setAttribute("role", "dialog");
+    taskModal.setAttribute("aria-modal", "true");
+    taskModal.setAttribute("aria-labelledby", "cart-task-modal-title");
+    taskModal.innerHTML =
+      '<div class="cart-task-modal-backdrop" data-cart-task-close></div>' +
+      '<div class="cart-task-modal-card">' +
+      '<h2 id="cart-task-modal-title">Describe your task</h2>' +
+      "<p>Tell us what you need help with for <strong>Other Tasks Not Listed</strong>.</p>" +
+      '<label for="cart-task-description">Task description *</label>' +
+      '<textarea id="cart-task-description" maxlength="' +
+      MAX_TASK_DESCRIPTION +
+      '" rows="4" placeholder="e.g. Hang blinds in two bedrooms and patch small drywall holes"></textarea>' +
+      '<div class="cart-task-modal-actions">' +
+      '<button type="button" class="btn btn-primary" id="cart-task-submit">Add to cart</button>' +
+      '<button type="button" class="btn-secondary" id="cart-task-cancel">Cancel</button>' +
+      "</div>" +
+      '<p class="status error" id="cart-task-error" hidden></p>' +
+      "</div>";
+
+    document.body.appendChild(taskModal);
+
+    var textarea = taskModal.querySelector("#cart-task-description");
+    var errorEl = taskModal.querySelector("#cart-task-error");
+
+    taskModal.querySelector("#cart-task-submit").addEventListener("click", function () {
+      var description = textarea.value.trim();
+      if (!description) {
+        errorEl.textContent = "Please describe the task you need completed.";
+        errorEl.hidden = false;
+        textarea.focus();
+        return;
+      }
+      if (!pendingOtherTask) {
+        closeTaskModal();
+        return;
+      }
+      completeAddToCart(
+        pendingOtherTask.name,
+        pendingOtherTask.price,
+        pendingOtherTask.priceLabel,
+        description
+      );
+      closeTaskModal();
+    });
+
+    taskModal.querySelector("#cart-task-cancel").addEventListener("click", closeTaskModal);
+    taskModal.querySelector("[data-cart-task-close]").addEventListener("click", closeTaskModal);
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && taskModal && !taskModal.hidden) {
+        closeTaskModal();
+      }
+    });
+
+    return taskModal;
+  }
+
+  function openTaskModal(name, price, priceLabel) {
+    pendingOtherTask = { name: name, price: price, priceLabel: priceLabel };
+    var modal = ensureTaskModal();
+    var textarea = modal.querySelector("#cart-task-description");
+    var errorEl = modal.querySelector("#cart-task-error");
+    textarea.value = "";
+    errorEl.hidden = true;
+    errorEl.textContent = "";
+    modal.hidden = false;
+    document.body.classList.add("cart-task-modal-open");
+    window.setTimeout(function () {
+      textarea.focus();
+    }, 0);
+  }
+
+  function closeTaskModal() {
+    pendingOtherTask = null;
+    if (!taskModal) {
+      return;
+    }
+    taskModal.hidden = true;
+    document.body.classList.remove("cart-task-modal-open");
+  }
+
+  function completeAddToCart(name, price, priceLabel, taskDescription) {
+    var quantity = RHSCart.addItem(name, price, priceLabel, {
+      taskDescription: taskDescription
+    });
+    var label = priceLabel || RHSCart.formatPrice(price);
+    var qtyLabel = quantity > 1 ? " (×" + quantity + ")" : "";
+    showCartToast(name + qtyLabel, label);
+  }
+
   function escapeHtml(value) {
     return String(value)
       .replace(/&/g, "&amp;")
@@ -202,19 +317,27 @@
       return expandItemsForCheckout(readCart());
     },
 
-    addItem: function (name, price, priceLabel) {
+    addItem: function (name, price, priceLabel, options) {
+      options = options || {};
       var items = readCart();
       var normalizedPrice = Number(price) || 0;
       var label = priceLabel || formatPrice(price);
-      var index = findItemIndex(items, name, normalizedPrice);
+      var taskDescription = isOtherTasksItem(name)
+        ? String(options.taskDescription || "").trim()
+        : "";
+      var index = findItemIndex(items, name, normalizedPrice, taskDescription);
 
       if (index === -1) {
-        items.push({
+        var entry = {
           name: name,
           price: normalizedPrice,
           priceLabel: label,
           quantity: 1
-        });
+        };
+        if (taskDescription) {
+          entry.taskDescription = taskDescription;
+        }
+        items.push(entry);
       } else {
         items[index].quantity += 1;
       }
@@ -254,10 +377,11 @@
   };
 
   window.addToCart = function (name, price, priceLabel) {
-    var quantity = RHSCart.addItem(name, price, priceLabel);
-    var label = priceLabel || RHSCart.formatPrice(price);
-    var qtyLabel = quantity > 1 ? " (×" + quantity + ")" : "";
-    showCartToast(name + qtyLabel, label);
+    if (isOtherTasksItem(name)) {
+      openTaskModal(name, price, priceLabel);
+      return;
+    }
+    completeAddToCart(name, price, priceLabel);
   };
 
   window.toggleCategory = function (button) {

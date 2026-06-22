@@ -137,7 +137,13 @@
 
     summaryEl.innerHTML = items.map(function (item) {
       var qty = item.quantity || 1;
-      var name = escapeHtml(item.name) + (qty > 1 ? " × " + qty : "");
+      var name = escapeHtml(item.name);
+      if (item.taskDescription) {
+        name += '<span class="order-line-note">' + escapeHtml(item.taskDescription) + "</span>";
+      }
+      if (qty > 1) {
+        name += " × " + qty;
+      }
       var lineTotal = (Number(item.price) || 0) * qty;
       var price =
         qty > 1
