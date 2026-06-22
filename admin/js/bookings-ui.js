@@ -19,6 +19,26 @@
     return "$" + Number(value || 0).toFixed(0);
   }
 
+  function formatEstimatedTotal(items, fixedTotal) {
+    var hasHourly = (items || []).some(function (item) {
+      var name = String(item && item.name ? item.name : "").toLowerCase();
+      if (name === "other tasks not listed") {
+        return true;
+      }
+      return String(item && item.priceLabel ? item.priceLabel : "")
+        .toLowerCase()
+        .indexOf("/hr") !== -1;
+    });
+    var fixed = Number(fixedTotal) || 0;
+    if (hasHourly && fixed > 0) {
+      return formatMoney(fixed) + " + TBD";
+    }
+    if (hasHourly) {
+      return "TBD";
+    }
+    return formatMoney(fixed);
+  }
+
   function renderItems(items) {
     if (!items || !items.length) {
       return "<p class=\"slot-meta\">No services listed.</p>";
@@ -65,7 +85,7 @@
               "<div class=\"slot-meta\">" + escapeHtml(booking.customerEmail) + " · " + escapeHtml(booking.customerPhone) + "</div>" +
               "<div class=\"slot-meta\">" + escapeHtml(booking.customerAddress) + "</div>" +
               renderItems(booking.items) +
-              "<div class=\"slot-meta\">Estimated total: " + escapeHtml(formatMoney(booking.estimatedTotal)) + "</div>" +
+              "<div class=\"slot-meta\">Estimated total: " + escapeHtml(formatEstimatedTotal(booking.items, booking.estimatedTotal)) + "</div>" +
               "</div>" +
               "<div class=\"booking-card-actions\">" +
               '<button type="button" class="btn-primary" data-approve="' + booking.id + '">Approve</button>' +

@@ -96,15 +96,7 @@
 
       items.forEach(function (item, index) {
         var qty = item.quantity || 1;
-        var lineTotal = (Number(item.price) || 0) * qty;
-        var priceDisplay =
-          qty > 1
-            ? escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price)) +
-              " × " +
-              qty +
-              " = " +
-              escapeHtml(RHSCart.formatPrice(lineTotal))
-            : escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price));
+        var priceDisplay = escapeHtml(RHSCart.formatLinePrice(item));
 
         var nameHtml = escapeHtml(item.name);
         if (item.taskDescription) {
@@ -123,8 +115,7 @@
       });
 
       summaryEl.hidden = false;
-      totalEl.textContent = RHSCart.formatPrice(RHSCart.getTotal()) +
-        (RHSCart.getTotal() === 0 ? " (custom items may apply)" : "");
+      totalEl.textContent = RHSCart.formatEstimatedTotal();
     }
 
     function escapeHtml(value) {
