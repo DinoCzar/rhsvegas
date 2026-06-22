@@ -77,6 +77,14 @@
   font-weight: 600;
 }
 
+.cart-item-note {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
 .cart-item-price {
   font-weight: 600;
   white-space: nowrap;
@@ -131,6 +139,15 @@
 
 .order-line:last-child {
   border-bottom: none;
+}
+
+.order-line-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-muted);
+  line-height: 1.45;
 }
 
 .form-grid {

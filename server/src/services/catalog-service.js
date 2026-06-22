@@ -88,6 +88,17 @@ function validateOrderItems(items) {
       throw new Error("UNKNOWN_ITEM");
     }
 
+    var taskDescription = String((item && item.taskDescription) || "").trim();
+    var isOtherTask = normalizeKey(name) === normalizeKey("Other Tasks Not Listed");
+
+    if (isOtherTask) {
+      if (!taskDescription || taskDescription.length > 500) {
+        throw new Error("INVALID_TASK_DESCRIPTION");
+      }
+    } else if (taskDescription) {
+      throw new Error("INVALID_TASK_DESCRIPTION");
+    }
+
     var clientPrice = Number(item.price) || 0;
     var serverPrice = Number(entry.price) || 0;
 
@@ -100,11 +111,15 @@ function validateOrderItems(items) {
     }
 
     estimatedTotal += serverPrice;
-    normalized.push({
+    var normalizedItem = {
       name: entry.cartName || entry.name,
       price: serverPrice,
       priceLabel: entry.priceLabel || formatPrice(entry)
-    });
+    };
+    if (taskDescription) {
+      normalizedItem.taskDescription = taskDescription;
+    }
+    normalized.push(normalizedItem);
   });
 
   return { items: normalized, estimatedTotal: estimatedTotal };

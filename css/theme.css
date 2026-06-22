@@ -277,6 +277,89 @@ body {
   }
 }
 
+/* ── Other Tasks modal ── */
+
+body.cart-task-modal-open {
+  overflow: hidden;
+}
+
+.cart-task-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.cart-task-modal[hidden] {
+  display: none;
+}
+
+.cart-task-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 53, 88, 0.55);
+}
+
+.cart-task-modal-card {
+  position: relative;
+  width: min(100%, 520px);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: 0 16px 48px rgba(30, 53, 88, 0.22);
+}
+
+.cart-task-modal-card h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  color: var(--color-primary);
+}
+
+.cart-task-modal-card p {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.cart-task-modal-card label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.cart-task-modal-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 120px;
+  padding: 12px 14px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  resize: vertical;
+}
+
+.cart-task-modal-card textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.cart-task-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cart-task-modal-card .status.error {
+  margin-top: 12px;
+}
+
 /* ── Site footer ── */
 
 .site-footer {
