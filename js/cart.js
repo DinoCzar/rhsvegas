@@ -413,6 +413,21 @@
       return items;
     },
 
+    setItemQuantity: function (index, quantity) {
+      var items = readCart();
+      if (index < 0 || index >= items.length) {
+        return items;
+      }
+      var qty = Math.max(0, Math.min(99, Math.floor(Number(quantity) || 0)));
+      if (qty <= 0) {
+        items.splice(index, 1);
+      } else {
+        items[index].quantity = qty;
+      }
+      writeCart(items);
+      return items;
+    },
+
     clear: function () {
       startNewCartSession();
     },

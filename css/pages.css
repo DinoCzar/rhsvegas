@@ -99,6 +99,43 @@
   text-align: center;
 }
 
+.cart-qty-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 2px;
+}
+
+.cart-qty-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: var(--color-surface-alt);
+  color: var(--color-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.15s ease;
+}
+
+.cart-qty-btn:hover {
+  background: var(--color-border);
+}
+
+.cart-qty-value {
+  min-width: 1.75rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
 .summary-row {
   display: flex;
   justify-content: space-between;
