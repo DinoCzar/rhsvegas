@@ -121,13 +121,20 @@
     });
   }
 
-  function getApiUrl(section) {
+  function getApiUrl(section, category) {
     if (!window.RHS_CONFIG || !RHS_CONFIG.apiUrl) {
       throw new Error("Missing RHS_CONFIG.apiUrl.");
     }
     var url = RHS_CONFIG.apiUrl.replace(/\/$/, "") + "/services";
+    var params = [];
     if (section) {
-      url += "?section=" + encodeURIComponent(section);
+      params.push("section=" + encodeURIComponent(section));
+    }
+    if (category) {
+      params.push("category=" + encodeURIComponent(category));
+    }
+    if (params.length) {
+      url += "?" + params.join("&");
     }
     return url;
   }
@@ -139,9 +146,10 @@
     }
 
     var sectionFilter = container.getAttribute("data-section") || "";
+    var categoryFilter = container.getAttribute("data-category") || "";
     var errorEl = document.getElementById("services-load-error");
 
-    return fetch(getApiUrl(sectionFilter))
+    return fetch(getApiUrl(sectionFilter, categoryFilter))
       .then(function (res) {
         return res.json().then(function (data) {
           if (!res.ok) {
@@ -154,7 +162,7 @@
         var services = data.services || [];
         window.RHS_SERVICES = services;
         renderAccordion(container, services, {
-          showSectionHeadings: !sectionFilter
+          showSectionHeadings: !sectionFilter && !categoryFilter
         });
         document.dispatchEvent(new Event("rhs-services-ready"));
         if (errorEl) {

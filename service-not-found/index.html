@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache">
-  <title>Assembly Services | Ryan's Home Solutions</title>
+  <title>Service Not Found | Ryan's Home Solutions</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
@@ -43,18 +43,23 @@
 
 <nav class="service-page-nav" aria-label="Service pages">
   <a href="/services">All Services</a>
-  <a href="/assembly/" aria-current="page">Assembly</a>
+  <a href="/assembly/">Assembly</a>
   <a href="/installation/">Installation</a>
   <a href="/other-services/">Other Services</a>
-  <a class="service-page-nav-cta" href="/service-not-found/">Service Not Found</a>
+  <a class="service-page-nav-cta" href="/service-not-found/" aria-current="page">Service Not Found</a>
 </nav>
 
 <div class="service-search-wrap">
-  <input type="search" class="service-search-input" placeholder="Search assembly services..." aria-label="Search assembly services">
+  <input type="search" class="service-search-input" placeholder="Search other tasks..." aria-label="Search other tasks">
 </div>
 <p class="service-search-no-results" hidden>No matching services found.</p>
 
-<div class="accordion-container" id="services-accordion" data-section="Assembly"></div>
+<div
+  class="accordion-container"
+  id="services-accordion"
+  data-section="Other Services"
+  data-category="Other Tasks"
+></div>
 <p class="service-search-no-results" id="services-load-error" hidden>Could not load services. Please refresh the page.</p>
 
 <footer class="site-footer">
