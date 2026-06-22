@@ -1,4 +1,4 @@
-/** Server-side service catalog — keep in sync with js/services-catalog.js */
+/** @deprecated Catalog is stored in the database. See bootstrap-services.js for seed data. */
 module.exports = [
   { section: "Assembly", category: "Dressers and Wardrobes", name: "Nightstand (1-2 drawer)", price: 45 },
   { section: "Assembly", category: "Dressers and Wardrobes", name: "Dresser (3-4 drawers)", price: 90 },

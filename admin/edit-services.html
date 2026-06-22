@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Services | Staff Portal | Ryan's Home Solutions</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=20260615">
+</head>
+<body>
+
+<div id="login-view" class="login-wrap">
+  <div class="login-card">
+    <h1>Staff Login</h1>
+    <p>Add and edit services shown on the public website.</p>
+    <form id="login-form">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button class="btn-primary" type="submit" style="width:100%">Sign In</button>
+      <p class="status error" id="login-status"></p>
+    </form>
+  </div>
+</div>
+
+<div id="app-view" class="hidden">
+  <header class="admin-header">
+    <div>
+      <h1>Ryan's Home Solutions — Staff Portal</h1>
+      <div class="user-badge" id="user-label"></div>
+    </div>
+    <button type="button" id="logout-btn">Sign Out</button>
+  </header>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <nav class="admin-sidebar-nav" aria-label="Staff portal sections">
+        <a class="admin-nav-link" href="/admin/">Scheduling</a>
+        <a class="admin-nav-link" href="/admin/gallery.html">Gallery</a>
+        <a class="admin-nav-link is-active" href="/admin/edit-services.html">Edit Services</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main">
+      <div class="card">
+        <h2 id="service-form-title">Add Service</h2>
+        <p class="card-help">Changes appear on the public services pages after you save. Use cart name when the checkout label should differ from the display name.</p>
+
+        <form id="service-form">
+          <input type="hidden" id="service-id" value="">
+          <div class="service-form-grid">
+            <div>
+              <label for="service-section">Section *</label>
+              <select id="service-section" required>
+                <option value="Assembly">Assembly</option>
+                <option value="Installation">Installation</option>
+                <option value="Other Services">Other Services</option>
+              </select>
+            </div>
+            <div>
+              <label for="service-category">Category *</label>
+              <input id="service-category" type="text" maxlength="120" required placeholder="e.g. TV Mounting">
+            </div>
+            <div>
+              <label for="service-name">Service name *</label>
+              <input id="service-name" type="text" maxlength="200" required placeholder="e.g. Mount TV">
+            </div>
+            <div>
+              <label for="service-cart-name">Cart name (optional)</label>
+              <input id="service-cart-name" type="text" maxlength="200" placeholder="Shown in cart if different">
+            </div>
+            <div>
+              <label for="service-price">Price (USD) *</label>
+              <input id="service-price" type="number" min="0" max="100000" step="1" required value="0">
+            </div>
+            <div>
+              <label for="service-price-label">Price label (optional)</label>
+              <input id="service-price-label" type="text" maxlength="80" placeholder="e.g. $25/shelf or Custom">
+            </div>
+          </div>
+          <label class="service-checkbox">
+            <input id="service-add-to-cart" type="checkbox" checked>
+            Show Add button on website
+          </label>
+          <div class="btn-row">
+            <button class="btn-primary" type="submit" id="service-save-btn">Add Service</button>
+            <button class="btn-secondary hidden" type="button" id="service-cancel-btn">Cancel Edit</button>
+          </div>
+          <p class="status" id="service-form-status"></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Current Services</h2>
+        <p class="status" id="services-list-status">Loading…</p>
+        <div id="services-admin-list"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>Not a state licensed contractor. All services performed in compliance with NRS 624.031.</p>
+</footer>
+
+<script src="js/admin.js?v=20260615"></script>
+<script src="js/services-ui.js?v=20260615"></script>
+
+</body>
+</html>

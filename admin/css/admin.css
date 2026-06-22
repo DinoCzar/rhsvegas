@@ -600,3 +600,75 @@ select {
   line-height: 1.6;
   color: #666;
 }
+
+.service-form-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 720px) {
+  .service-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.service-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.service-checkbox input {
+  width: auto;
+  margin: 0;
+}
+
+.services-admin-section {
+  margin: 20px 0 10px;
+  font-family: "Outfit", system-ui, sans-serif;
+  color: var(--rhs-blue);
+  font-size: 1.05rem;
+}
+
+.services-admin-section:first-child {
+  margin-top: 0;
+}
+
+.services-admin-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.services-admin-item.is-inactive {
+  opacity: 0.55;
+}
+
+.services-admin-main {
+  min-width: 0;
+}
+
+.services-admin-main strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.services-admin-meta {
+  display: block;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.services-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}

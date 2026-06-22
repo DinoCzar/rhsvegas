@@ -300,15 +300,23 @@
       return;
     }
 
-    if (document.querySelector(".service-grid")) {
-      var resultsEl = ensureResultsContainer();
-      if (resultsEl) {
-        resultsEl.addEventListener("click", onResultsClick);
+    function bindSearch() {
+      if (document.querySelector(".service-grid")) {
+        var resultsEl = ensureResultsContainer();
+        if (resultsEl) {
+          resultsEl.addEventListener("click", onResultsClick);
+        }
       }
+
+      input.addEventListener("input", onSearchInput);
+      input.addEventListener("search", onSearchInput);
     }
 
-    input.addEventListener("input", onSearchInput);
-    input.addEventListener("search", onSearchInput);
+    if (document.getElementById("services-accordion")) {
+      document.addEventListener("rhs-services-ready", bindSearch, { once: true });
+    } else {
+      bindSearch();
+    }
   }
 
   if (document.readyState === "loading") {

@@ -53,59 +53,8 @@
 </div>
 <p class="service-search-no-results" hidden>No matching services found.</p>
 
-<div class="accordion-container">
-
-  <!-- SAUNA ASSEMBLY -->
-  <div class="category">
-    <button class="dropdown-btn" onclick="toggleCategory(this)">
-      <span>Sauna Assembly</span>
-      <span class="arrow">▼</span>
-    </button>
-    <div class="content">
-      <div class="item">
-        <span>Sauna Assembly</span>
-        <span class="price">Custom</span>
-        <button class="add-btn" onclick="addToCart('Sauna Assembly', 0)">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOXES -->
-  <div class="category">
-    <button class="dropdown-btn" onclick="toggleCategory(this)">
-      <span>Boxes</span>
-      <span class="arrow">▼</span>
-    </button>
-    <div class="content">
-      <div class="item">
-        <span>Break Down Boxes</span>
-        <span class="price">$10/box</span>
-        <button class="add-btn" onclick="addToCart('Break Down Boxes', 10, '$10/box')">Add</button>
-      </div>
-      <div class="item">
-        <span>Carry Boxes Upstairs (under 100 lbs)</span>
-        <span class="price">$20/box</span>
-        <button class="add-btn" onclick="addToCart('Carry Boxes Upstairs (under 100 lbs)', 20, '$20/box')">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- OTHER TASKS -->
-  <div class="category">
-    <button class="dropdown-btn" onclick="toggleCategory(this)">
-      <span>Other Tasks</span>
-      <span class="arrow">▼</span>
-    </button>
-    <div class="content">
-      <div class="item">
-        <span>Other Tasks Not Listed</span>
-        <span class="price">$50/hr per person</span>
-        <button class="add-btn" onclick="addToCart('Other Tasks Not Listed', 50, '$50/hr per person')">Add</button>
-      </div>
-    </div>
-  </div>
-
-</div>
+<div class="accordion-container" id="services-accordion" data-section="Other Services"></div>
+<p class="service-search-no-results" id="services-load-error" hidden>Could not load services. Please refresh the page.</p>
 
 <footer class="site-footer">
   <p>Not a state licensed contractor. All services performed in compliance with NRS 624.031.</p>
@@ -113,6 +62,7 @@
 
 <script src="/js/config.js"></script>
 <script src="/js/cart.js"></script>
+<script src="/js/services-page.js"></script>
 <script src="/js/service-search.js"></script>
 <script src="/js/nav.js"></script>
 
