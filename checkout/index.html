@@ -136,8 +136,14 @@
     }
 
     summaryEl.innerHTML = items.map(function (item) {
-      return '<div class="order-line"><span>' + escapeHtml(item.name) + '</span><span>' +
-        escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price)) + "</span></div>";
+      var qty = item.quantity || 1;
+      var name = escapeHtml(item.name) + (qty > 1 ? " × " + qty : "");
+      var lineTotal = (Number(item.price) || 0) * qty;
+      var price =
+        qty > 1
+          ? escapeHtml(RHSCart.formatPrice(lineTotal))
+          : escapeHtml(item.priceLabel || RHSCart.formatPrice(item.price));
+      return '<div class="order-line"><span>' + name + '</span><span>' + price + "</span></div>";
     }).join("") + '<div class="order-line"><strong>Estimated total</strong><strong>' +
       escapeHtml(RHSCart.formatPrice(RHSCart.getTotal())) + "</strong></div>";
 
@@ -272,7 +278,7 @@
         email: form.email.value.trim(),
         phone: form.phone.value.trim(),
         address: form.address.value.trim(),
-        items: items,
+        items: RHSCart.getCheckoutItems(),
         estimatedTotal: RHSCart.getTotal(),
         slotId: selectedSlot.id,
         appointmentStart: selectedSlot.start,

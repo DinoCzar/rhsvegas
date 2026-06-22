@@ -63,10 +63,49 @@
   function readCart() {
     migrateLegacyCart();
     try {
-      return JSON.parse(localStorage.getItem(cartStorageKey())) || [];
+      var items = JSON.parse(localStorage.getItem(cartStorageKey())) || [];
+      return items.map(normalizeItem);
     } catch (e) {
       return [];
     }
+  }
+
+  function normalizeItem(item) {
+    return {
+      name: item.name,
+      price: Number(item.price) || 0,
+      priceLabel: item.priceLabel || formatPrice(item.price),
+      quantity: Math.max(1, Number(item.quantity) || 1)
+    };
+  }
+
+  function itemKey(name, price) {
+    return String(name).trim().toLowerCase() + "|" + String(Number(price) || 0);
+  }
+
+  function findItemIndex(items, name, price) {
+    var key = itemKey(name, price);
+    for (var i = 0; i < items.length; i += 1) {
+      if (itemKey(items[i].name, items[i].price) === key) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  function expandItemsForCheckout(items) {
+    var expanded = [];
+    items.forEach(function (item) {
+      var qty = item.quantity || 1;
+      for (var i = 0; i < qty; i += 1) {
+        expanded.push({
+          name: item.name,
+          price: item.price,
+          priceLabel: item.priceLabel
+        });
+      }
+    });
+    return expanded;
   }
 
   function writeCart(items) {
@@ -138,7 +177,9 @@
   }
 
   function updateCartBadge() {
-    var count = readCart().length;
+    var count = readCart().reduce(function (sum, item) {
+      return sum + (item.quantity || 1);
+    }, 0);
     document.querySelectorAll("[data-cart-count]").forEach(function (el) {
       el.textContent = String(count);
     });
@@ -157,15 +198,29 @@
   window.RHSCart = {
     getItems: readCart,
 
+    getCheckoutItems: function () {
+      return expandItemsForCheckout(readCart());
+    },
+
     addItem: function (name, price, priceLabel) {
       var items = readCart();
-      items.push({
-        name: name,
-        price: Number(price) || 0,
-        priceLabel: priceLabel || formatPrice(price)
-      });
+      var normalizedPrice = Number(price) || 0;
+      var label = priceLabel || formatPrice(price);
+      var index = findItemIndex(items, name, normalizedPrice);
+
+      if (index === -1) {
+        items.push({
+          name: name,
+          price: normalizedPrice,
+          priceLabel: label,
+          quantity: 1
+        });
+      } else {
+        items[index].quantity += 1;
+      }
+
       writeCart(items);
-      return items.length;
+      return items[index === -1 ? items.length - 1 : index].quantity;
     },
 
     removeItem: function (index) {
@@ -180,12 +235,14 @@
     },
 
     getCount: function () {
-      return readCart().length;
+      return readCart().reduce(function (sum, item) {
+        return sum + (item.quantity || 1);
+      }, 0);
     },
 
     getTotal: function () {
       return readCart().reduce(function (sum, item) {
-        return sum + (Number(item.price) || 0);
+        return sum + (Number(item.price) || 0) * (item.quantity || 1);
       }, 0);
     },
 
@@ -197,9 +254,10 @@
   };
 
   window.addToCart = function (name, price, priceLabel) {
-    RHSCart.addItem(name, price, priceLabel);
+    var quantity = RHSCart.addItem(name, price, priceLabel);
     var label = priceLabel || RHSCart.formatPrice(price);
-    showCartToast(name, label);
+    var qtyLabel = quantity > 1 ? " (×" + quantity + ")" : "";
+    showCartToast(name + qtyLabel, label);
   };
 
   window.toggleCategory = function (button) {
