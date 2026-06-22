@@ -93,6 +93,12 @@ router.get(
       params.push(category);
     }
 
+    const name = String(req.query.name || "").trim();
+    if (name) {
+      sql += " AND name = ?";
+      params.push(name);
+    }
+
     sql += " ORDER BY section ASC, category ASC, sort_order ASC, id ASC";
 
     const rows = await db.all(sql, params);

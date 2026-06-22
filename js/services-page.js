@@ -91,6 +91,34 @@
     return sections;
   }
 
+  function renderFlatList(container, services) {
+    var html = '<div class="service-flat-list">';
+    services.forEach(function (service) {
+      html += renderItem(service);
+    });
+    html += "</div>";
+    container.innerHTML = html;
+    bindAddButtons(container);
+  }
+
+  function bindAddButtons(container) {
+    if (container.dataset.addBound === "true") {
+      return;
+    }
+    container.dataset.addBound = "true";
+    container.addEventListener("click", function (event) {
+      var button = event.target.closest(".add-btn[data-name]");
+      if (!button || !window.addToCart) {
+        return;
+      }
+      addToCart(
+        button.getAttribute("data-name"),
+        Number(button.getAttribute("data-price")),
+        button.getAttribute("data-price-label") || undefined
+      );
+    });
+  }
+
   function renderAccordion(container, services, options) {
     var showSectionHeadings = options.showSectionHeadings;
     var grouped = groupServices(services);
@@ -107,21 +135,10 @@
     });
 
     container.innerHTML = html;
-
-    container.addEventListener("click", function (event) {
-      var button = event.target.closest(".add-btn[data-name]");
-      if (!button || !window.addToCart) {
-        return;
-      }
-      addToCart(
-        button.getAttribute("data-name"),
-        Number(button.getAttribute("data-price")),
-        button.getAttribute("data-price-label") || undefined
-      );
-    });
+    bindAddButtons(container);
   }
 
-  function getApiUrl(section, category) {
+  function getApiUrl(section, category, name) {
     if (!window.RHS_CONFIG || !RHS_CONFIG.apiUrl) {
       throw new Error("Missing RHS_CONFIG.apiUrl.");
     }
@@ -132,6 +149,9 @@
     }
     if (category) {
       params.push("category=" + encodeURIComponent(category));
+    }
+    if (name) {
+      params.push("name=" + encodeURIComponent(name));
     }
     if (params.length) {
       url += "?" + params.join("&");
@@ -147,9 +167,11 @@
 
     var sectionFilter = container.getAttribute("data-section") || "";
     var categoryFilter = container.getAttribute("data-category") || "";
+    var serviceNameFilter = container.getAttribute("data-service-name") || "";
+    var flatList = container.getAttribute("data-flat-list") === "true";
     var errorEl = document.getElementById("services-load-error");
 
-    return fetch(getApiUrl(sectionFilter, categoryFilter))
+    return fetch(getApiUrl(sectionFilter, categoryFilter, serviceNameFilter))
       .then(function (res) {
         return res.json().then(function (data) {
           if (!res.ok) {
@@ -160,10 +182,19 @@
       })
       .then(function (data) {
         var services = data.services || [];
+        if (serviceNameFilter) {
+          services = services.filter(function (service) {
+            return service.name === serviceNameFilter;
+          });
+        }
         window.RHS_SERVICES = services;
-        renderAccordion(container, services, {
-          showSectionHeadings: !sectionFilter && !categoryFilter
-        });
+        if (flatList) {
+          renderFlatList(container, services);
+        } else {
+          renderAccordion(container, services, {
+            showSectionHeadings: !sectionFilter && !categoryFilter && !serviceNameFilter
+          });
+        }
         document.dispatchEvent(new Event("rhs-services-ready"));
         if (errorEl) {
           errorEl.hidden = true;
