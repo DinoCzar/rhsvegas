@@ -9,7 +9,7 @@ const staticCspDirectives = {
   imgSrc: ["'self'", "data:", "https:"],
   connectSrc: [
     "'self'",
-    "https://rhsvegas-api-c5y0.onrender.com",
+    "https://rhsvegas-api.onrender.com",
     "https://api.rhsvegas.com",
     "http://localhost:3001"
   ],

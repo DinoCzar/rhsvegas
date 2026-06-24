@@ -83,7 +83,7 @@ module.exports = {
     })
     .filter(Boolean),
   apiHosts: (process.env.API_HOSTS ||
-    "localhost,rhsvegas-api-c5y0.onrender.com,api.rhsvegas.com")
+    "localhost,rhsvegas-api.onrender.com,api.rhsvegas.com")
     .split(",")
     .map(function (s) {
       return s.trim();
