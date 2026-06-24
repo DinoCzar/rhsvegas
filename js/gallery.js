@@ -6,7 +6,7 @@
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
       return "http://localhost:3001/api";
     }
-    return "https://rhsvegas-api-c5y0.onrender.com/api";
+    return "https://rhsvegas-api.onrender.com/api";
   }
 
   function galleryImageUrl(imagePath) {

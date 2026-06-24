@@ -43,7 +43,7 @@ services:
       - key: SMTP_FROM
         sync: false
       - key: FRONTEND_ORIGINS
-        value: https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site.onrender.com,https://rhsvegas-site-c5y0.onrender.com,https://rhsvegas-api-c5y0.onrender.com,https://api.rhsvegas.com
+        value: https://rhsvegas.com,https://www.rhsvegas.com,https://rhsvegas-site.onrender.com,https://rhsvegas-api.onrender.com,https://api.rhsvegas.com
       - key: TURSO_DATABASE_URL
         sync: false
       - key: TURSO_AUTH_TOKEN
@@ -72,7 +72,7 @@ services:
         value: camera=(), microphone=(), geolocation=()
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://rhsvegas-api-c5y0.onrender.com https://api.rhsvegas.com http://localhost:3001; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://rhsvegas-api.onrender.com https://api.rhsvegas.com http://localhost:3001; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
     routes:
       - type: rewrite
         source: /cart

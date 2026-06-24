@@ -1,10 +1,9 @@
 (function () {
   /** GoDaddy domain → Render. Update if your Render service names differ. */
   var PRODUCTION_SITE_HOSTS = ["rhsvegas.com", "www.rhsvegas.com"];
-  var RENDER_API_ORIGIN = "https://rhsvegas-api-c5y0.onrender.com";
-  // Checkout uses this URL. SMTP must be configured on THIS Render service
-  // (rhsvegas-api), not a separate duplicate service. Verify at:
-  //   https://rhsvegas-api-c5y0.onrender.com/api/health  → email.configured: true
+  var RENDER_API_ORIGIN = "https://rhsvegas-api.onrender.com";
+  // Checkout uses this URL. SMTP must be configured on rhsvegas-api (Render).
+  // Verify: https://rhsvegas-api.onrender.com/api/health
   var PRODUCTION_API_ORIGIN = RENDER_API_ORIGIN;
 
   function apiOrigin() {
